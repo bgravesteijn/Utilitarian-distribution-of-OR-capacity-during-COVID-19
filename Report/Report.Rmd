@@ -935,7 +935,7 @@ urg_cpcty <- ggplot(df_res_main[df_res_main$type=="QALY",],
   theme_bw()+
   labs(col="QALY loss per month",
        x="Median length of stay at the ward (days)",
-       y="Duration intervention (min)")+
+       y="Duration surgery (min)")+
   scale_color_gradient(low="blue", high="red")+
   theme(text=element_text(size=20))
        
@@ -952,7 +952,7 @@ urg_cpcty2 <- ggplot(df_res_main[df_res_main$type=="QALY"&df_res_main$Label!="ES
                   segment.color = 'grey50',cex=6)+
   geom_point(cex=3)+
   theme_bw()+
-  labs(x="Duration intervention (min)",
+  labs(x="Duration surgery (min)",
        y="QALY loss per month")+
   theme(text=element_text(size=20))
        
