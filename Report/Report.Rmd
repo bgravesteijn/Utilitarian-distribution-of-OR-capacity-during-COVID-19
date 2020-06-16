@@ -984,11 +984,10 @@ ggsave(urg_n, file="../figures/main_results/n_urg.png", width=40, height=30, uni
 ```
 
 ```{r class evidence}
-load("../output/input_param.Rdata")
+param <- readxl::read_excel("../data/Model parameters.xlsx", sheet="Complete")
 
 param <- data.table(param)
-
-prm <- unique(param$Param)
+param <- param[!is.na(param$Unit),]
 
 tbl_cls <- CreateCatTable(vars = c("Evidence_type","Evidence_class"),
                           strata = "Param",
