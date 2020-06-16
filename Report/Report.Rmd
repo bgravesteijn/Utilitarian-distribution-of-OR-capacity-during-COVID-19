@@ -36,7 +36,7 @@ runModel <- FALSE # Do we want to run the model again? Or just generate the repo
 ```{r, eval = TRUE, echo = FALSE, warnings = FALSE, message = FALSE}
 if (!require('pacman')) install.packages('pacman'); library(pacman) # use this package to conveniently install other packages
 # load (install if required) packages from CRAN
-p_load("here", "dplyr", "devtools", "scales", "ellipse", "ggplot2", "lazyeval", "igraph", "ggraph", "reshape2", "knitr", "citr", "plyr", "stats", "diagram", "EnvStats", "data.table", "gridExtra","ggrepel")   
+p_load("here", "dplyr", "devtools", "scales", "ellipse", "ggplot2", "lazyeval", "igraph", "ggraph", "reshape2", "knitr", "citr", "plyr", "stats", "diagram", "EnvStats", "data.table", "gridExtra","ggrepel","tableone")   
 
 # load (install if required) packages from GitHub
 # install_github("DARTH-git/dampack", force = TRUE) #Uncomment if there is a newer version
@@ -984,7 +984,21 @@ ggsave(urg_n, file="../figures/main_results/n_urg.png", width=40, height=30, uni
 ```
 
 ```{r class evidence}
+load("../output/input_param.Rdata")
 
+param <- data.table(param)
+
+prm <- unique(param$Param)
+
+tbl_cls <- CreateCatTable(vars = c("Evidence_type","Evidence_class"),
+                          strata = "Param",
+                          data = param, 
+                          test = FALSE)
+tbl_cls <- print(tbl_cls,printToggle=FALSE)  
+  
+
+kable(tbl_cls)
+write.csv2(tbl_cls, file = "../figures/main_results/evidence_tbl.csv")
 ```
 
 
