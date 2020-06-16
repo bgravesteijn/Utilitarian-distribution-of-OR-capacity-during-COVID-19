@@ -19,7 +19,7 @@ library(dampack)
 
 
 # Load data
-param <- data.frame(readxl::read_xlsx("Data/Model parameters.xlsx"))
+param <- data.frame(readxl::read_xlsx("Data/Model parameters.xlsx",sheet="Complete"))
 cbs   <- read.csv("Data/CBS lifetable.csv", sep = ";")
 
 # document which paramaters do not have a unit and will be deleted
@@ -123,7 +123,6 @@ param_psa <- make_psa_df(param = param, n_iter = n_iter, seed = 19)
 
 # Remove the unit column, since these units are now all adjusted to weekly probabilities or age in years
 param_psa <- subset(param_psa, select = -c(Unit)) # Store the weekly probabilities in the dataframe param
-
 
 # loop over every disease 
 for (d in pop_names){
