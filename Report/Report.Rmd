@@ -515,8 +515,10 @@ desc_df_vlakker <- desc_df[desc_df$Label%in%c("ASD, repair",
                                               "Ovarium ca., resection and HIPEC", 
                                               "High-risk endometrium ca, resection",
                                               "Mammaca., mastectomy", 
-                                              "Cholangeoca., resection",
-                                              "High-grade glioma, resection",
+                                              "Cholangeoca., resection", "MI bladder ca, cystectomy"
+                                              ,
+              "AVR, TAVI",                                "High-grade glioma, resection","PAD F3-4, bypass",
+                                              "Penis ca., resection",
                                               "Liver metastasis colonca, resection"),]
 desc_df_lin     <- desc_df[!desc_df$Label%in%c(desc_df_vlakker$Label, desc_df_steiler$Label),]
 
@@ -587,18 +589,18 @@ res_main$`QALY/month` <- NA
 # Obtain the AAC/max (estimate +95% CI) and store in the data.frame
 for(i in order_populations){
 res_main[i,"QALY/month"] <- paste(sprintf("%.2f",
-                                             -urg_qaly$urg[
+                                             urg_qaly$urg[
                                                urg_qaly$Label==i]
                                              ),
                                      " (",
                                      sprintf("%.2f",
-                                             -urg_qaly$urg_hi[
+                                             urg_qaly$urg_lo[
                                                urg_qaly$Label==i
                                                ]
                                              ),
                                      " - ",
                                      sprintf("%.2f",
-                                             -urg_qaly$urg_lo[
+                                             urg_qaly$urg_hi[
                                                urg_qaly$Label==i
                                                ]  
                                              ),
@@ -723,7 +725,7 @@ urg2[urg2$type=="QALY",c("urg","urg_lo","urg_hi")][urg2[urg2$type=="QALY",c("urg
 urg2[urg2$type=="LY",c("urg","urg_lo","urg_hi")][urg2[urg2$type=="LY",c("urg","urg_lo","urg_hi")]<0] <- 0
 
 ## To ensure that QALYs also have positive ticks (x-axis)
-breaks <- seq(-0.3,0.3, by=0.06)
+breaks <- seq(-0.40,0.40, by=0.06)
 names(breaks) <- abs(breaks)
 
 ## To ensure that QALY = Left, and LY = right
@@ -736,13 +738,13 @@ urg_v2 <- ggplot(urg2, aes(x = Label, y = urg, ymin=urg_lo, ymax=urg_hi)) +
   geom_hline(yintercept = 0, colour = "black") +
   
   facet_wrap_custom(~type, scales = "free_x", scale_overrides = list(
-    scale_override(1, scale_y_continuous(limits = c(-0.25, 0),
-                                         breaks = seq(from = -0.3, to = 0,by = 0.05),
-                                         labels = seq(from = 0.3,  to = 0,by = -0.05), 
+    scale_override(1, scale_y_continuous(limits = c(-0.40, 0),
+                                         breaks = seq(from = -0.40, to = 0,by = 0.05),
+                                         labels = seq(from = 0.40,  to = 0,by = -0.05), 
                      expand = c(0, 0))),
-    scale_override(2, scale_y_continuous(limits = c(0, 0.25),
-                                         breaks = seq(from = 0, to = 0.3,by = 0.05),
-                                         labels = seq(from = 0,  to = 0.3,by = 0.05), 
+    scale_override(2, scale_y_continuous(limits = c(0, 0.40),
+                                         breaks = seq(from = 0, to = 0.40,by = 0.05),
+                                         labels = seq(from = 0,  to = 0.40,by = 0.05), 
                      expand = c(0, 0)))
   ))+
   coord_flip() +
@@ -803,10 +805,10 @@ for(d in order_populations){
 # USe the names of the population rather than the combination of patients and resection
 if(plot_psa_again){
 ## Save psa data into figures
-for(d in order_patients){
+for(d in order_populations){
   p <- gsub(' ', "_", d)
   png(paste("../figures/QALY_per_pop/",p,"_psa.png",sep=""), width = 1200, height=400 )
-  gridExtra::grid.table(param_psa_summary[param_psa_summary$Population==d,])
+  gridExtra::grid.table(param_psa_summary[param_psa_summary$Label==d,])
   dev.off()
 }
 }
@@ -928,7 +930,7 @@ The table above shows the data for the investigated interventions for 3 years.
 urg_cpcty <- ggplot(df_res_main[df_res_main$type=="QALY",],
                   aes(x=los_nonicu_med, y=duration_or_med, label=Label,
                       col=urg))+
-  geom_label_repel(box.padding   = 0.35, 
+  geom_label_repel(box.padding   = 0.40, 
                   point.padding = 0.5,
                   segment.color = 'grey50',cex=6)+
   geom_point(aes(size=count))+
@@ -947,7 +949,7 @@ ggsave(urg_cpcty, file="../figures/main_results/duration_urg.png", width=40, hei
 ```{r,echo = FALSE, fig.width=16, fig.height=16}
 urg_cpcty2 <- ggplot(df_res_main[df_res_main$type=="QALY"&df_res_main$Label!="ESLD, transplant",],
                   aes(x=duration_or_med, y=urg, label=Label))+
-  geom_label_repel(box.padding   = 0.35, 
+  geom_label_repel(box.padding   = 0.40, 
                   point.padding = 0.5,
                   segment.color = 'grey50',cex=6)+
   geom_point(cex=3)+
@@ -965,7 +967,7 @@ ggsave(urg_cpcty2, file="../figures/main_results/duration_urg_v2.png", width=40,
 urg_n <- ggplot(df_res_main,
                   aes(x=urg, y=count, label=Label))+
   geom_point(cex=2)+
-  geom_label_repel(box.padding   = 0.35, 
+  geom_label_repel(box.padding   = 0.40, 
                   point.padding = 0.5,
                   segment.color = 'grey50')+
   theme_bw()+
@@ -984,20 +986,22 @@ ggsave(urg_n, file="../figures/main_results/n_urg.png", width=40, height=30, uni
 ```
 
 ```{r class evidence}
+library(tableone)
 param <- readxl::read_excel("../data/Model parameters.xlsx", sheet="Complete")
 
 param <- data.table(param)
 param <- param[!is.na(param$Unit),]
 
-tbl_cls <- CreateCatTable(vars = c("Evidence_type","Evidence_class"),
+tbl_cls <- CreateTableOne(vars = c("Evidence_type","Evidence_class"),
                           strata = "Param",
                           data = param, 
-                          test = FALSE)
-tbl_cls <- print(tbl_cls,printToggle=FALSE)  
+                          test = FALSE,
+                          factorVars = c("Evidence_type","Evidence_class"))
+tbl_cls2 <- print(tbl_cls,printToggle=FALSE)  
   
 
-kable(tbl_cls)
-write.csv2(tbl_cls, file = "../figures/main_results/evidence_tbl.csv")
+kableone(tbl_cls)
+write.csv2(tbl_cls2, file = "../figures/main_results/evidence_tbl.csv")
 ```
 
 
