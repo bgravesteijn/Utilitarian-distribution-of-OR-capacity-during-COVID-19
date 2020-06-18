@@ -982,7 +982,8 @@ ggsave(urg_n, file="../figures/main_results/n_urg.png", width=40, height=30, uni
 
 
 ```{r correlation between rankings}
-
+# % of total hospital capacity
+sum(cpcty$count[cpcty$Hix_label%in%key.df$Hix_label_1])/sum(cpcty$count)*100
 ```
 
 ```{r class evidence}
