@@ -491,7 +491,6 @@ order_patients      <- as.character(urg_qaly$Pop[order(urg_qaly$urg, decreasing 
 order_interventions <- as.character(urg_qaly$Intervention[order(urg_qaly$urg, decreasing = TRUE)]) # of interventions
 ```
 
-
 ## Main results
 ```{r, echo=FALSE, message=FALSE}
 results_pooled$std <- 0
@@ -837,7 +836,6 @@ all_images_v <- all_images_v[-1]
 knitr::include_graphics(all_images_v)
 ```
 
-
 ## Coupling with HIX data
 The data which G. Geleijnse extracted from Hix, can be used to optimize OR time. For many of the diseases, the mean duration of the operation was found. We will first couple the HIX data to our own data.
 
@@ -980,10 +978,39 @@ urg_n
 ggsave(urg_n, file="../figures/main_results/n_urg.png", width=40, height=30, units = "cm")
 ```
 
-
 ```{r correlation between rankings}
 # % of total hospital capacity
 sum(cpcty$count[cpcty$Hix_label%in%key.df$Hix_label_1])/sum(cpcty$count)*100
+
+bnft[bnft$Bnft==min(bnft$Bnft[bnft$type=="QALY"]),]
+bnft[bnft$Bnft==max(bnft$Bnft[bnft$type=="QALY"]),]
+
+bnft_rnk_ly <- bnft[bnft$type=="LY",]
+bnft_rnk_ly <- bnft_rnk_ly[order(bnft_rnk_ly$Bnft),]
+bnft_rnk_ly$rnk <- nrow(bnft_rnk_qaly):1
+bnft_rnk_qaly <- bnft[bnft$type=="QALY",]
+bnft_rnk_qaly <- bnft_rnk_qaly[order(bnft_rnk_qaly$Bnft),]
+bnft_rnk_qaly$rnk <- nrow(bnft_rnk_qaly):1
+urg_rnk_ly <- urg[urg$type=="LY",]
+urg_rnk_ly <- urg_rnk_ly[order(urg_rnk_ly$urg),]
+urg_rnk_ly$rnk <- nrow(bnft_rnk_qaly):1
+urg_rnk_qaly <- urg[urg$type=="QALY",]
+urg_rnk_qaly <- urg_rnk_qaly[order(urg_rnk_qaly$urg),]
+urg_rnk_qaly$rnk <- nrow(bnft_rnk_qaly):1
+
+bnft_lyqaly_cor <- merge(bnft_rnk_ly, bnft_rnk_qaly, by="Label")
+cor.test(bnft_lyqaly_cor$rnk.y,
+         bnft_lyqaly_cor$rnk.x, method = "spearman")
+
+bnfturg_qaly_cor <- merge(bnft_rnk_qaly, urg_rnk_qaly, by="Label")
+cor.test(bnfturg_qaly_cor$rnk.y,
+         bnfturg_qaly_cor$rnk.x, method = "spearman")
+
+urg_lyqaly_compare <- merge(urg_rnk_qaly, urg_rnk_ly, by="Label")
+
+rnk_ly_min_qaly <- urg_lyqaly_compare$rnk.y-urg_lyqaly_compare$rnk.x
+urg_lyqaly_compare[which(rnk_ly_min_qaly==min(rnk_ly_min_qaly)),c("Label","rnk.x","rnk.y")]
+urg_lyqaly_compare[which(rnk_ly_min_qaly==max(rnk_ly_min_qaly)),c("Label","rnk.x","rnk.y")]
 ```
 
 ```{r class evidence}
@@ -1004,8 +1031,6 @@ tbl_cls2 <- print(tbl_cls,printToggle=FALSE)
 kableone(tbl_cls)
 write.csv2(tbl_cls2, file = "../figures/main_results/evidence_tbl.csv")
 ```
-
-
 
 # Acknowledgement 
 # @BG and @EK, we have to check if the list is complete 
