@@ -987,16 +987,16 @@ bnft[bnft$Bnft==max(bnft$Bnft[bnft$type=="QALY"]),]
 
 bnft_rnk_ly <- bnft[bnft$type=="LY",]
 bnft_rnk_ly <- bnft_rnk_ly[order(bnft_rnk_ly$Bnft),]
-bnft_rnk_ly$rnk <- nrow(bnft_rnk_qaly):1
+bnft_rnk_ly$rnk <- nrow(bnft_rnk_ly):1
 bnft_rnk_qaly <- bnft[bnft$type=="QALY",]
 bnft_rnk_qaly <- bnft_rnk_qaly[order(bnft_rnk_qaly$Bnft),]
-bnft_rnk_qaly$rnk <- nrow(bnft_rnk_qaly):1
+bnft_rnk_qaly$rnk <- nrow(bnft_rnk_ly):1
 urg_rnk_ly <- urg[urg$type=="LY",]
 urg_rnk_ly <- urg_rnk_ly[order(urg_rnk_ly$urg),]
-urg_rnk_ly$rnk <- nrow(bnft_rnk_qaly):1
+urg_rnk_ly$rnk <- nrow(bnft_rnk_ly):1
 urg_rnk_qaly <- urg[urg$type=="QALY",]
 urg_rnk_qaly <- urg_rnk_qaly[order(urg_rnk_qaly$urg),]
-urg_rnk_qaly$rnk <- nrow(bnft_rnk_qaly):1
+urg_rnk_qaly$rnk <- nrow(bnft_rnk_ly):1
 
 bnft_lyqaly_cor <- merge(bnft_rnk_ly, bnft_rnk_qaly, by="Label")
 cor.test(bnft_lyqaly_cor$rnk.y,
@@ -1006,7 +1006,31 @@ bnfturg_qaly_cor <- merge(bnft_rnk_qaly, urg_rnk_qaly, by="Label")
 cor.test(bnfturg_qaly_cor$rnk.y,
          bnfturg_qaly_cor$rnk.x, method = "spearman")
 
+ly_urg_qaly_cor <- merge(bnft_rnk_ly, urg_rnk_qaly, by="Label")
+cor.test(ly_urg_qaly_cor$rnk.y,
+         ly_urg_qaly_cor$rnk.x, method = "spearman")
+
 urg_lyqaly_compare <- merge(urg_rnk_qaly, urg_rnk_ly, by="Label")
+cor_all <- data.frame(type=rep(c("urg_qaly","urg_ly","bnft_qaly","bnft_ly"),
+                               each=nrow(bnft_rnk_qaly)),
+                      label=c(as.character(urg_rnk_qaly$Label),
+                              as.character(urg_rnk_ly$Label),
+                              as.character(bnft_rnk_qaly$Label),
+                              as.character(bnft_rnk_ly$Label)),
+                      rank=c(urg_rnk_qaly$rnk,
+                              urg_rnk_ly$rnk,
+                              bnft_rnk_qaly$rnk,
+                              bnft_rnk_ly$rnk))
+cor_all <- reshape(data=cor_all, direction = "wide", 
+        idvar = "label", 
+        timevar =  "type" )
+library(corrplot)
+colnames(cor_all)[-1] <- c("Urgency - QALY", "Urgency - LY","Benefit - QALY","Benefit - LY")
+PerformanceAnalytics::chart.Correlation(cor_all[,-1], method = "spearman")
+
+tiff("../figures/main_results/correlation_rankings.tiff", res=600, width=4000, height=4000, compression="lzw")
+PerformanceAnalytics::chart.Correlation(cor_all[,-1], method = "spearman")
+dev.off()
 
 rnk_ly_min_qaly <- urg_lyqaly_compare$rnk.y-urg_lyqaly_compare$rnk.x
 urg_lyqaly_compare[which(rnk_ly_min_qaly==min(rnk_ly_min_qaly)),c("Label","rnk.x","rnk.y")]
