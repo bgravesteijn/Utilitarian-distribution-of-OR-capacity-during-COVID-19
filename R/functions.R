@@ -507,17 +507,20 @@ beta_params <- function(mean, sigma) {
 #-----------------------------------------------------------------------------------------------#
 #### R function to change probabilities to rates and rates to probabilities  ####
 #-----------------------------------------------------------------------------------------------#
-ProbToRate <- function(p){
+ProbToRate <- function(p , t){
   # argument
-  # p : the probability
-  # Retunrs:
+  # p: the probability of the event 
+  # t:  time in which the event took place 
+  # Returns:
   # r : rate
-  r <- -log(1 - p)
+  r <- -(1/t) * log(1 - p)
   r
 }
 
 RateToProb <- function(r, t){
+  # Argument 
   p <- 1 - exp(-r * t)
   return(p)
 }
+
 

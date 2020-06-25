@@ -1,5 +1,5 @@
 
-# Load functions 
+#### Load functions ####
 source("R/app0_functions.R")  # Load a function to install packages
 source("R/functions.R")       # Load general functions useful for Markov models 
 source("R/functions_PSA.R")   # Load the PSA function  
@@ -11,14 +11,14 @@ source("R/model.R")           # Code of the main model
 # install_and_load(v_packages_to_install)
 # install_github("DARTH-git/dampack", force = TRUE)
 
-# Load packages
+#### Load packages ####
 library(ggplot2)
 library(data.table)
 library(triangle)
 library(dampack)
 
 
-# Load data
+#### Load data ####
 param <- data.frame(readxl::read_xlsx("Data/Model parameters.xlsx",sheet="Complete"))
 cbs   <- read.csv("Data/CBS lifetable.csv", sep = ";")
 
@@ -32,32 +32,32 @@ param <- param[!is.na(param$Unit), ]
 numvar <- c("Med", "Lo", "Hi")
 for (i in numvar) {param[, i] <- as.numeric(param[, i])}
 
-#############################
-## Survival to right units ##
-#############################
+# ############################# #
+#### Survival to right units ####
+# ############################# #
 
 # ## median survival times --> hazard to die 
  param[param$Unit == "Median survival time (weeks)", c("Med", "Lo", "Hi")]  <- log(2)/param[param$Unit == "Median survival time (weeks)", c("Med", "Hi", "Lo")]
 # explanation convertion: https://ncss-wpengine.netdna-ssl.com/wp-content/themes/ncss/pdf/Procedures/NCSS/Survival_Parameter_Conversion_Tool.pdf
 
 ## 120-day survival rate --> probability to die per week
-param[param$Unit == "Probability 120-day survival", c("Med", "Lo", "Hi")]  <- RateToProb(ProbToRate(1 - param[param$Unit == "Probability 120-day survival", c("Med", "Hi", "Lo")]), 1/120*7)
+param[param$Unit == "Probability 120-day survival", c("Med", "Lo", "Hi")]  <- RateToProb(ProbToRate(1 - param[param$Unit == "Probability 120-day survival", c("Med", "Hi", "Lo")]), t = 1/120*7)
 
 ## 10-year survival rate --> probability to die per week
-param[param$Unit == "Probability 10-year survival", c("Med", "Lo", "Hi")]  <- RateToProb(ProbToRate(1 - param[param$Unit == "Probability 10-year survival", c("Med", "Hi", "Lo")]), 1/(10 * 52))
+param[param$Unit == "Probability 10-year survival", c("Med", "Lo", "Hi")]  <- RateToProb(ProbToRate(1 - param[param$Unit == "Probability 10-year survival", c("Med", "Hi", "Lo")]), t = 1/(10 * 52))
 
 ## 5-year survival rate --> probability to die per week
-param[param$Unit == "Probability 5-year survival", c("Med", "Lo", "Hi")]  <- RateToProb(ProbToRate(1 - param[param$Unit == "Probability 5-year survival", c("Med", "Hi", "Lo")]), 1/(5 * 52))
+param[param$Unit == "Probability 5-year survival", c("Med", "Lo", "Hi")]  <- RateToProb(ProbToRate(1 - param[param$Unit == "Probability 5-year survival", c("Med", "Hi", "Lo")]), t = 1/(5 * 52))
 
 ## 3-year survival rate --> probability to die per week
-param[param$Unit == "Probability 3-year survival", c("Med", "Lo", "Hi")]  <- RateToProb(ProbToRate(1 - param[param$Unit == "Probability 3-year survival", c("Med", "Hi", "Lo")]), 1/(3 * 52))
+param[param$Unit == "Probability 3-year survival", c("Med", "Lo", "Hi")]  <- RateToProb(ProbToRate(1 - param[param$Unit == "Probability 3-year survival", c("Med", "Hi", "Lo")], t = 1), 1/(3 * 52))
 
 
 ## 1-year survival rate --> probability to die per week
-param[param$Unit == "Probability 1-year survival", c("Med", "Lo", "Hi")]  <- RateToProb(ProbToRate(1 - param[param$Unit == "Probability 1-year survival", c("Med", "Hi", "Lo")]), 1/(1 * 52))
+param[param$Unit == "Probability 1-year survival", c("Med", "Lo", "Hi")]  <- RateToProb(ProbToRate(1 - param[param$Unit == "Probability 1-year survival", c("Med", "Hi", "Lo")], t = 1), 1/(1 * 52))
 
 ## 30-day survival rate --> probability to die per week
-param[param$Unit == "Probability 30 day survival", c("Med", "Lo", "Hi")]  <- RateToProb(ProbToRate(1 - param[param$Unit == "Probability 30 day survival", c("Med", "Hi", "Lo")]), 1/30)
+param[param$Unit == "Probability 30 day survival", c("Med", "Lo", "Hi")]  <- RateToProb(ProbToRate(1 - param[param$Unit == "Probability 30 day survival", c("Med", "Hi", "Lo")], t = 1), 1/30)
 
 
 ## Mortality rate per person year --> probability to die per week
@@ -75,9 +75,9 @@ cbs$prob <- (cbs$Man_kans + cbs$Vrouw_kans) / 2
 cbs$age <- as.numeric(substr(cbs$Leeftijd, start = 1, stop = 2))
 
 
-######################
-## Other units      ##
-######################
+##########################
+###### Other units    ####
+##########################
 ## Days --> weeks
 param[param$Unit == "Days", c("Med", "Lo", "Hi")]  <- param[param$Unit == "Days", c("Med", "Lo", "Hi")]/7
 

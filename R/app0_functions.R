@@ -1,4 +1,4 @@
-# Write code to install all the packages 
+# Code to install all the packages 
 ### Function to check if packages are installed and if not, install them
 install_and_load <- function(packages) {
   # Modified from https://www.listendata.com/2018/12/install-load-multiple-r-packages.html

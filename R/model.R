@@ -6,23 +6,24 @@ make_m_trans <- function(number_states = NULL,
                          state_names = NULL,
                          number_cycles = NULL, 
                          parameters = NULL,
-                         cbsdata = NULL){
+                         data = NULL){
 # # Arguments:  
   ## number_states: number of states
-  ## state_names: names of the states
-  ## n_cycles: number of cycles 
-  ## parameters: parameters in the model
-  ## cbsdata: data of the cbs containing survival probabilities
-# Returns: 
-  # m_trans: gives the transition probability array
+  ## state_names:   names of the states
+  ## n_cycles:      number of cycles 
+  ## parameters:    parameters in the model
+  ## data:          data of national survival probabilities
+# Returns:
+  # m_trans: the transition probability array
   
   # Construct transition probability array
   m_trans     <- array(data = 0, dim = c(number_states, number_states, n_cycles), 
                        dimnames = list(state_names, state_names))
   
-  # standard probability to die (from CBS data) 
-  # based on the average age of the patient. The parameters is used of all cycles
-  # this probability is added to the disease specific mortality
+  # standard probability to die (from national data) 
+  # based on the average age of the patient. This parameters is used in all cycles
+  # because the time frame of the model is one year and patients are not aging
+  # this age-specific probability is added to the disease specific mortality
   p_die <- rep(cbsdata[cbsdata$age >= parameters["Age"], ]$prob, each = 52)
   
   # Fill the array, first health state is the health state the individual start
@@ -50,7 +51,7 @@ make_m_trans <- function(number_states = NULL,
      m_trans["Preop", "Dead", c(ceiling(parameters["Time_noeff_Surv"]) : number_cycles)]
     
     # calculate the remaining transition probability to stay in the Postop state
-    m_trans["Postop", "Postop", c(ceiling(parameters["Time_noeff_Surv"]) : number_cycles)] <- 1 -        m_trans["Postop", "Dead", c(ceiling(parameters["Time_noeff_Surv"]) : number_cycles)]
+    m_trans["Postop", "Postop", c(ceiling(parameters["Time_noeff_Surv"]) : number_cycles)] <- 1 - m_trans["Postop", "Dead", c(ceiling(parameters["Time_noeff_Surv"]) : number_cycles)]
   }
   
   ##BUILD IN ERROR MESSAGE to check if transition matrix is valid (i_e_, each row should add up to 1)
@@ -58,7 +59,7 @@ make_m_trans <- function(number_states = NULL,
   if (!isTRUE(all.equal(as.numeric(sum(valid)), as.numeric(number_cycles)))) {
     invalid_cycles <- which(valid == FALSE)
     if(length (invalid_cycles) > 10){
-      stop(paste("This is not a valid transition Matrix. Issued in more that", as.character(length(invalid_cycles)), "cycles", sep = " ")) 
+      stop(paste("This is not a valid transition Matrix. Issues in more that", as.character(length(invalid_cycles)), "cycles", sep = " ")) 
     }
     else {   
       stop(print("This is not a valid transition Matrix. Issues in: "), 
@@ -94,9 +95,9 @@ trans_operation <- function(trans_matrix = NULL, weeks_until_op = NULL, number_c
   
   number_states <- dim(trans_matrix)[1]  # count the number of health states
   
-  # If delay = 999, make the weeks_until_op as large as n.cycles
-  if(weeks_until_op==999){
-    weeks_until_op <- number_cycles-1
+  # If delay = 999, make the weeks_until_op as large as n_cycles
+  if(weeks_until_op == 999){
+    weeks_until_op <- number_cycles - 1
   }
   
   trans_matrix["Preop",
@@ -200,7 +201,7 @@ calculateDerivative <- function(df_pooled, plot = FALSE, plot_ind = FALSE, cum =
 
 plotPopulationOutcomes <- function(data, folder = "figures/", size_cm = 10){
   # Arguments:
-  ## data: pooled results
+  ## data:   pooled results
   ## folder: folder where figures are stored
   
   pop_names <- sort(unique(data$Label))
