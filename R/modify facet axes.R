@@ -1,3 +1,4 @@
+# Code to change the axis of facets in ggplots
 
 scale_override <- function(which, scale) {
   if(!is.numeric(which) || (length(which) != 1) || (which %% 1 != 0)) {

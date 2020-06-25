@@ -24,7 +24,7 @@ make_m_trans <- function(number_states = NULL,
   # based on the average age of the patient. This parameters is used in all cycles
   # because the time frame of the model is one year and patients are not aging
   # this age-specific probability is added to the disease specific mortality
-  p_die <- rep(cbsdata[cbsdata$age >= parameters["Age"], ]$prob, each = 52)
+  p_die <- rep(data[data$age >= parameters["Age"], ]$prob, each = 52)
   
   # Fill the array, first health state is the health state the individual start
   # the second health state is the health state the individual transitions to

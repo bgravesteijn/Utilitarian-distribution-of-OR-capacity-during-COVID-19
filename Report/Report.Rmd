@@ -1,7 +1,7 @@
 ---
 title: "Operation Room Triage model"
 author: "A collaboration of Erasmus MC researchers"
-date: "Report created: `r format(Sys.time(), '%d %B, %Y')`, Last update model: 11/5/2020"
+date: "Report created: `r format(Sys.time(), '%d %B, %Y')`, Last update model: 23/6/2020"
 output: word_document
 header-includes:
   - \usepackage{titling}
@@ -45,7 +45,7 @@ p_load_gh("DARTH-git/dampack")
 source("../R/functions.R")         # Load general functions useful for Markov models 
 source("../R/functions_PSA.R")     # Load the PSA function  
 source("../R/model.R")             # Code of the main model
-source("../R/modify facet axes.R") # To change the axis of facets in ggplots
+source("../R/modify facet axes.R") # Code to change the axis of facets in ggplots
 ```
 
 
@@ -54,7 +54,7 @@ source("../R/modify facet axes.R") # To change the axis of facets in ggplots
 The aim of this model is to support the triage for semi-elective operation within the Erasmus MC by identifying disease with the greatest potential loss by delaying surgery. 
 
 # How to read this report
-The first sections gives a summary of the research and includes the most important conclussions and gives an overview of the model assumptions. In the second section we describe the model in more detail and provide an explanation of the files used to generate the results. All the code and data is provided in the appendix and can be used to replicate the results or modify the model for a different disease or surgery type. In the final section, section 3, all model results are included. 
+The first sections gives a summary of the research. It includes the most important conclussions and gives an overview of the model assumptions. In the second section we describe the model in more detail and provide an explanation of the files used to generate the results. All the code and summary data is provided on GitHub and can be used to replicate the results or modify the model for a context. In the final section, section 3, all model results are included. 
 
 \newpage
 
@@ -79,7 +79,7 @@ layout.fig <- c(2, 1)
 
 plotmat(t(m_P_diag), t(layout.fig), self.cex = 0.5, curve = 0, arr.pos = 0.8, latex = T, arr.type = "curved", relsize = 0.85, box.prop = 0.8, cex = 0.8, box.cex = 0.7, lwd = 1) # Draw state transition model
 
-png("../figures/model_str.png", width=3000, height=2000, res=600)
+png("../figures/model_str.png", width = 3000, height = 2000, res = 600)
 plotmat(t(m_P_diag), t(layout.fig), self.cex = 0.5, curve = 0, arr.pos = 0.8, latex = T, arr.type = "curved", relsize = 0.85, box.prop = 0.8, cex = 0.8, box.cex = 0.7, lwd = 1) # Draw state transition model
 dev.off()
 ```
@@ -98,8 +98,6 @@ The cohort is modeled over several strategies. The first strategy is immediate s
 
 - The SARS-Cov2 virus causing the pandemic situation is not modeled. 
 
-- All patients are assumed to be not infected by COVID-19. 
-
 - (Artifical) triangular distributions are used for parameter distribution, if the real distribution is not known.
 
 
@@ -112,7 +110,6 @@ The cohort is modeled over several strategies. The first strategy is immediate s
 - Both survival with and without surgery is not age specific, unless specified. 
 
 - The survival after surgery is not affected by the delay of the surgery. 
-
 - The survival/effect of surgery is similar during an epidemic as compared to a normal setting (e.g. the difference of the health care system does not affect the patient outcomes).
 
 - We do not include major complications (major bleeding etc.) of surgery because we assume that these complications are rare and equally distributed among the operations. As well as evenly likely to happen in situations of immediate surgery versus delayed surgery. 
@@ -138,11 +135,9 @@ The cohort is modeled over several strategies. The first strategy is immediate s
 
 - For some disease, surgery delay can cause an inreversable QoL decrease (e.g. getting blind, permanent function loss after fracture). 
 
-- *Add/check: Assumption we have with the QoL when they are equal /below/above*
-
 
 # Section 2: The model
-In this section we describe some of the steps that are done to get the results. We refer to several functions that help to run the model. These files can be found in the appendix of this report but are not shown in full detail. This reporst focusses mainly on the results. However, it is important to understand how the model is strucured and we enourage those interested to take a look at the code, replicate the results or modify the model for you own needs. 
+In this section we describe some of the steps that are done to get the results. We refer to several functions that help to run the model. These files can be found in the R folder on GitHubbut are not shown in full detail. This report focusses mainly on the results. However, we enourage those interested to take a look at the code, replicate the results or modify the model for you own needs. 
 
 The main file to run the model is the file called `main.R`. To generate update results of the model and this report this file needs to be executed. 
 
@@ -152,12 +147,11 @@ To get this results the following steps describe the proces conceptually:
 
 2.  **Load the literature data into the environment** 
 
-We load the literature data and mdify the data in order to be usded to 
-model a cohort using weekly cycles. 
+We load the literature data and modify the data in order to model a cohort using weekly cycles. 
 
 3.  **Model a cohort over time**
 
-A model simulates a cohort of individuals up to an average age of 100 years while keeping track of the distribution of the cohort among hte different health states _Preop_, _Postop_, _Dead_. For example, for the senerio of immediate surgery, surgery within 2 weeks, the cohort is modeled for two weeks using the survival rate before surgery. In these first two weeks of the model the individuals are at risk of dying according to the weekly probability of dying before surgery. If this happens they transition to _Dead_ otherwise they stay in _Preop_. After 2 weeks, those in the _Preop_ all get the surgery, and they make the transition to _Postop_. For the remaining cycles, they are at risk of dying according based on the survival rates after surgery. 
+A model simulates a cohort of individuals up to an average age of 100 years while keeping track of the distribution of the cohort among the different health states _Preop_, _Postop_, _Dead_. For example, for the senerio of immediate surgery, surgery within 2 weeks, the cohort is modeled for two weeks using the survival rate before surgery. In these first two weeks of the model the individuals are at risk of dying according to the weekly probability of dying before surgery. If this happens they transition to _Dead_ otherwise they stay in _Preop_. After 2 weeks, those in the _Preop_ all get the surgery, and they make the transition to _Postop_. For the remaining cycles, they are at risk of dying according based on the survival rates after surgery. 
 
 3.1 **Calculate the QALYs**
 
@@ -169,7 +163,7 @@ Repeat step 3 and 3.1 for a several times of delay for surgery. In our code we m
 
 5. **Incorporate parameter uncertainty**
 
-Using one parameter value for each model parameter in step 3 and 4 assumes we are certain about this values. However, this is not the case and our parameters come with some uncertainty. Some to this uncertainty is described by the literature, some is based on expert opinion. In order to capture parameter uncertainty on the model outcome we have to repeat steps 3 and 4 several times using different combinations of parameter values drawn from the distribtions. Therfore, we repeat stepts 3 and 4 100 times and calculate the average expected QALYS and the distibution around it.
+Using one parameter value for each model parameter in step 3 and 4 assumes we are certain about this values. However, this is not the case and our parameters come with some uncertainty. In order to capture parameter uncertainty on the model outcome we have to repeat steps 3 and 4 several times using different combinations of parameter values drawn from the distribtions. Therfore, we repeat steps 3 and 4 hunderd times and calculate the average expected QALYS and the distibution around it.
 
 6. **Repeat for all diseases ** 
 
@@ -179,7 +173,7 @@ Step 3, 4 and 5 are now repeated for all diseases of interest.
 In the paragraphs below we describe how these steps are incorporated in the code. 
 
 
-## 01 Required packages
+## 01 Required 
 
 To run the model we make use of some packages which can be downloaded from CRAN as well as a package in development, called `dampack`, which we download from Github. But running the following lines of code one can prepare the computer to replicated the results. In order to install the package from GitHub. The uncommended code about the code `p_load_gh("DARTH-git/dampack")` should be used to load the package into the environment. This should only be done once.  
 ```{r, eval = FALSE, echo = TRUE, warnings = FALSE, message = FALSE}
@@ -209,7 +203,7 @@ source("../R/functions_PSA.R")   # Load the PSA function
 ## 03 Input model parameters
 
 ### 03.1 Load parameter data
-We import the the parameters found in the literature for the different populations and different interventions. These parameters are stored in the `Model parameters.xlsx` file in the _data_ folder and a list of reference can be found **ADD REFERENCE TO LITERATURE**
+We import the the parameters found in the literature for the different populations and different interventions. These parameters are stored in the `Model parameters.xlsx` file in the _data_ folder and a list of reference can be found in Appendix A of the manuscript.
 
 Moreover, we import the the age- and gender-specific mortality rates in 2018, downloaded from the [CBS](www.CBS.nl). Thes age-specific mortality rates are used to model the background mortality of individuals. The disease specific mortality is added to the age-specific mortality.  
 ```{r, eval = runModel, echo = FALSE, warning = FALSE, message = FALSE}
@@ -227,7 +221,7 @@ All model parameters have a mean estimate as well as a describtion. The data des
 
 ####03.3.1 Make PSA datset
 
-We make use of a probabilistic sensitivity analysis (PSA) to demonstrate the robustness of the model outcomes. In other words, how sensitive are our model outcomes due to the uncertainty of the input parameters. A PSA requires a dataset which contains a set of parameter values drawn from the distribution for each PSA iteration. 
+We make use of a probabilistic sensitivity analysis (PSA) to demonstrate the robustness of the model outcomes. In other words, how sensitive are our model outcomes to the uncertainty of the input parameters. A PSA requires a dataset which contains a set of parameter values drawn from the distribution for each PSA iteration. 
 
 To generate this PSA dataset we use the function `make_psa_df` as described in the `functions_PSA.R` file in the _R_ folder. Based on the model parameter values and their corresponding distribution the function generates a dataset with parameter values of each iteration of the PSA. This PSA dataset is called `param_psa`, which stands for parameters for the psa. 
 
@@ -238,33 +232,31 @@ load("../output/psa_parameters.RData")
 param_psa <- data.table(param_psa)
 
 # Prob per week --> probability 1-year
-param_psa[param_psa$Param %in% c("Surv_tx","Surv_no_tx"), 
-          c("psa_est")]  <- 
-  1-RateToProb(
+param_psa[param_psa$Param %in% c("Surv_tx", "Surv_no_tx"), 
+          c("psa_est")]  <- 1 - RateToProb(
     ProbToRate(param_psa[param_psa$Param %in% c("Surv_tx","Surv_no_tx"), 
-                                  c("psa_est")]), 
-    52)
+                                  c("psa_est")]), t = 52)
 
 
 # Function to calculate estimate/95% CI
 aggregate_psa <- function(x){
   #For small numbers, use 5 decimals
-  if(median(x)<0.01){
+  if(median(x) < 0.01){
     paste(
-                            sprintf(quantile(x,probs=0.5), fmt="%.5f"),
+                            sprintf(quantile(x, probs = 0.5), fmt = "%.5f"),
                             " (",
-                            sprintf(quantile(x,probs=0.025), fmt="%.5f"),
+                            sprintf(quantile(x, probs = 0.025), fmt = "%.5f"),
                             " - ",
-                            sprintf(quantile(x,probs=0.975), fmt="%.5f"),
-                            ")", sep="")
+                            sprintf(quantile(x, probs = 0.975), fmt = "%.5f"),
+                            ")", sep = "")
   }else{ #Use 2 decimals in general
     paste(
-                            sprintf(quantile(x,probs=0.5), fmt="%.2f"),
+                            sprintf(quantile(x, probs = 0.5), fmt = "%.2f"),
                             " (",
-                            sprintf(quantile(x,probs=0.025), fmt="%.2f"),
+                            sprintf(quantile(x, probs = 0.025), fmt = "%.2f"),
                             " - ",
-                            sprintf(quantile(x,probs=0.975), fmt="%.2f"),
-                            ")", sep="")
+                            sprintf(quantile(x, probs = 0.975), fmt = "%.2f"),
+                            ")", sep = "")
 
   }
 }
@@ -275,19 +267,23 @@ param_psa_summary <- param_psa[,.(`Estimate, 95%CI` = aggregate_psa(psa_est),
                        by =.(Label, Param, Source)]
 
 #Add units
-units <- data.frame(Param = c("Age", "QoL_no_tx", "QoL_tx", "Surv_no_tx", "Surv_tx","Tx_eff","Time_noeff_Surv","Time_noeff_QoL"),
-                    Unit = c("Years", "Utility", "Utility", "Probability per year", "Probability per year", "OR/HR/RR", "Weeks", "weeks"))
+units <- data.frame(Param = c("Age", 
+                              "QoL_no_tx", "QoL_tx", 
+                              "Surv_no_tx", "Surv_tx",
+                              "Tx_eff",
+                              "Time_noeff_Surv", "Time_noeff_QoL"),
+                     Unit = c("Years", 
+                             "Utility", "Utility", 
+                             "Probability per year", "Probability per year", 
+                             "OR/HR/RR", 
+                             "Weeks", "weeks"))
 
 param_psa_summary$Units <- units$Unit[match(param_psa_summary$Param, units$Param)]
 
-
-#knitr::kable(param_psa, caption = "The parameters with assumed distributions.") 
-
 # print the PSA data only for one disease
-# @BG I think it is better to only show one or some and not the full list - I removedd the rest to the appendix 
 knitr::kable(param_psa_summary[param_psa_summary$Label == "ASD, repair"], caption = "The parameters with assumed distributions.") 
 
-write.csv2(param_psa_summary, file="../figures/main_results/res_psa.csv")
+write.csv2(param_psa_summary, file = "../figures/main_results/res_psa.csv")
 ```
 
 The following figures show the input parameters of all diseases in forest plots.
@@ -295,65 +291,65 @@ The following figures show the input parameters of all diseases in forest plots.
 
 plot_psa <- function(psa_df, plot_prm = "all", logscale = FALSE){
   #Select parameters of interest
-  if(plot_prm=="all"){
+  if(plot_prm == "all"){
     subset <- rep(TRUE, nrow(psa_df))
   }else{
-    subset <- psa_df$Param==plot_prm
+    subset <- psa_df$Param == plot_prm
   }
   
   #If you want to plot on the logscale
   if(logscale){
     plot_psa <- ggplot(psa_df[subset,], 
-                       aes(x=Label, y=psa_est))+
-      geom_boxplot()+
-      labs(x="",y="PSA estimates")+
-      facet_wrap(~Param, scales = "free_x")+
-      scale_y_log10()+
-      coord_flip()+
-      theme_bw()+
-      theme(text=element_text(size=15))
+                       aes(x = Label, y = psa_est)) +
+      geom_boxplot() +
+      labs(x = "", y = "PSA estimates") +
+      facet_wrap(~Param, scales = "free_x") +
+      scale_y_log10() +
+      coord_flip() +
+      theme_bw() +
+      theme(text = element_text(size = 15))
   }else{
-    plot_psa <- ggplot(psa_df[subset,], aes(x=Label, y=psa_est))+
-      geom_boxplot()+
-      labs(x="",y="PSA estimates")+
-      facet_wrap(~Param, scales = "free_x")+
-      coord_flip()+
-      theme_bw()+
-      theme(text=element_text(size=15))
+    plot_psa <- ggplot(psa_df[subset, ], aes(x = Label, y = psa_est)) +
+      geom_boxplot() +
+      labs(x = "", y = "PSA estimates") +
+      facet_wrap(~Param, scales = "free_x") +
+      coord_flip() +
+      theme_bw() +
+      theme(text = element_text(size = 15))
   }
   return(plot_psa)
 }
 
 
 plot_psa(psa_df = param_psa[
-  !param_psa$Param%in%c("Tx_eff","Time_noeff_QoL"),])
+  !param_psa$Param%in%c("Tx_eff", "Time_noeff_QoL"), ])
 
 ggsave(plot_psa(psa_df = param_psa[
-  !param_psa$Param%in%c("Tx_eff","Time_noeff_QoL"),]), 
-       device="png", file="../figures/main_results/psa_est.png", 
-       width=35, height=35, units="cm")
+  !param_psa$Param%in%c("Tx_eff", "Time_noeff_QoL"), ]), 
+       device = "png", file = "../figures/main_results/psa_est.png", 
+       width = 35, height = 35, units = "cm")
 ggsave(plot_psa(psa_df = param_psa), 
-       device="png", file="../figures/main_results/psa_est_all.png", 
-       width=26, height=30, units="cm")
+       device = "png", file = "../figures/main_results/psa_est_all.png", 
+       width = 26, height = 30, units="cm")
 ggsave(plot_psa(psa_df = param_psa, plot_prm = "Surv_tx"), 
-       device="png", file="../figures/main_results/psa_est_survtx.png", 
-       width=15, height=15, units="cm")
+       device = "png", file = "../figures/main_results/psa_est_survtx.png", 
+       width = 15, height = 15, units = "cm")
 ggsave(plot_psa(psa_df = param_psa, plot_prm = "Surv_no_tx"), 
-       device="png", file="../figures/main_results/psa_est_survnotx.png", 
-       width=15, height=15, units="cm")
+       device = "png", file = "../figures/main_results/psa_est_survnotx.png", 
+       width = 15, height = 15, units = "cm")
 ggsave(plot_psa(psa_df = param_psa, plot_prm = "QoL_tx"), 
-       device="png", file="../figures/main_results/psa_est_qoltx.png", 
-       width=15, height=15, units="cm")
+       device = "png", file = "../figures/main_results/psa_est_qoltx.png", 
+       width = 15, height = 15, units = "cm")
 ggsave(plot_psa(psa_df = param_psa, plot_prm = "QoL_no_tx"), 
-       device="png", file="../figures/main_results/psa_est_qolnotx.png", 
-       width=15, height=15, units="cm")
+       device = "png", file = "../figures/main_results/psa_est_qolnotx.png", 
+       width = 15, height = 15, units = "cm")
 ggsave(plot_psa(psa_df = param_psa, plot_prm = "Age"), 
-       device="png", file="../figures/main_results/psa_est_age.png", 
-       width=15, height=15, units="cm")
+       device = "png", file = "../figures/main_results/psa_est_age.png", 
+       width = 15, height = 15, units = "cm")
 ggsave(plot_psa(psa_df = param_psa, plot_prm = "Time_noeff_Surv"), 
-       device="png", file="../figures/main_results/psa_est_tnoeffsurv.png", 
-       width=15, height=15, units="cm")
-
+       device = "png", file = "../figures/main_results/psa_est_tnoeffsurv.png", 
+       width = 15, height = 15, units = "cm")
+ 
   
 ```
 
@@ -1039,7 +1035,7 @@ urg_lyqaly_compare[which(rnk_ly_min_qaly==max(rnk_ly_min_qaly)),c("Label","rnk.x
 
 ```{r class evidence}
 library(tableone)
-param <- readxl::read_excel("../data/Model parameters.xlsx", sheet="Complete")
+param <- readxl::read_excel("../data/Model parameters.xlsx", sheet = "Complete")
 
 param <- data.table(param)
 param <- param[!is.na(param$Unit),]
@@ -1049,27 +1045,23 @@ tbl_cls <- CreateTableOne(vars = c("Evidence_type","Evidence_class"),
                           data = param, 
                           test = FALSE,
                           factorVars = c("Evidence_type","Evidence_class"))
-tbl_cls2 <- print(tbl_cls,printToggle=FALSE)  
-  
 
+tbl_cls2 <- print(tbl_cls, printToggle = FALSE)  
+  
 kableone(tbl_cls)
 write.csv2(tbl_cls2, file = "../figures/main_results/evidence_tbl.csv")
 ```
 
 # Acknowledgement 
-# @BG and @EK, we have to check if the list is complete 
-
 The team: 
 - The principal investigators of this projects are: R.J. Baatenburg de Jong and H.F. Lingsma
-- The research team: I.R.A. Retel Helmrich, E. van Veen, H.F. Lingsma, C.L. van Lint, S.M. Bruinsma, R.J. Baatenburg de Jong, B.Y. Gravesteijn, E.M. Krijkamp
 - The code is written by: B.Y. Gravesteijn and E.M. Krijkamp
-- For the methods and materials used for the collection of the quality of life values we like to thank J.J. van Busschbach. 
+- The research team: 
+Benjamin Gravesteijn, Eline Krijkamp, Jan Busschbach, Geert Geleijnse,  Isabel Retel Helmrich, Sophie Bruinsma, Céline van Lint, Ernest van Veen,  Ewout Steyerberg, Kees Verhoef,  Jan van Saase,  Hester Lingsma, Rob Baatenburg de Jong and collaborations**
 
-We would like to acknowledge C. Verhoef, C.H. Bangma, C.M.F. Dirven, E.M. Roes, G. Geleijnse, G. Jansen van Rosendaal, H.A. Polinder - Bos, J.A. Goudzwaard,  J.J.M. Takkenberg, J.L.C.M. van Saase, M.G. van Vledder, P.J.E. Bindels,S. Sleijfer, T.W. Galema for active participation in this research. A special thanks goes to H. Karreman and C. Van der Velden - van der Graaf for the incredable amount of work they have done to proces the data. 
+** We would like to acknowledge our collaborations Chris Bangma, Ivo Beetz, Patrick Bindels, Alexandra Brandt-Kerkhof, Danielle van Diepen, Clemens Dirven, Tjebbe Galema, Jeanette Goudzwaard, Mieke Hazes, Sjoerd Lagarde, Harmke Polinder-Bos, Eva Maria Roes, Hanneke Takkenberg and Mark van Vledder for active participation in this research. 
 
-We would like to acknowledge XXX and XXX for the survival data 
-
-XXX other names of people that helped with this research (and are not authors of the document). 
+We are grateful for Lisa Caulley for her suggestions to revise the final manuscript. We are grateful for H. Karreman and C. Van der Velden-van der Graaf for the work they have done for the quality of life data collection. Moreover, we want to thank Ruben Goedhart, Esther van Spronsen and Linda van der Sluijs – van der Beek for extracting the data from the electronic patient registry. 
 
 For this research we made use of the template developed by the Decision Analysis in R for Technologies in Health (DARTH) workgroup: <http://darthworkgroup.com>.
 
@@ -1077,9 +1069,7 @@ The notation of our code is based on the following provided framework and coding
 Alarid-Escudero, F., Krijkamp, E.M., Pechlivanoglou, P. et al. A Need for Change! A Coding Framework for Improving Transparency in Decision Modeling. PharmacoEconomics 37, 1329–1339 (2019). <https://doi.org/10.1007/s40273-019-00837-x>.
 
 
-There was no funding for this research. 
-
-CONFLICTS OF INTEREST?
+There was no funding for this research and no conflicts of interest to report. 
 
 All errors in the code are the responsibility of the authors. 
 

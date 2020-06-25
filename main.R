@@ -41,13 +41,13 @@ for (i in numvar) {param[, i] <- as.numeric(param[, i])}
 # explanation convertion: https://ncss-wpengine.netdna-ssl.com/wp-content/themes/ncss/pdf/Procedures/NCSS/Survival_Parameter_Conversion_Tool.pdf
 
 ## 120-day survival rate --> probability to die per week
-param[param$Unit == "Probability 120-day survival", c("Med", "Lo", "Hi")]  <- RateToProb(ProbToRate(1 - param[param$Unit == "Probability 120-day survival", c("Med", "Hi", "Lo")]), t = 1/120*7)
+param[param$Unit == "Probability 120-day survival", c("Med", "Lo", "Hi")]  <- RateToProb(ProbToRate(1 - param[param$Unit == "Probability 120-day survival", c("Med", "Hi", "Lo")], t = 1), t = 1/(120/7))
 
 ## 10-year survival rate --> probability to die per week
-param[param$Unit == "Probability 10-year survival", c("Med", "Lo", "Hi")]  <- RateToProb(ProbToRate(1 - param[param$Unit == "Probability 10-year survival", c("Med", "Hi", "Lo")]), t = 1/(10 * 52))
+param[param$Unit == "Probability 10-year survival", c("Med", "Lo", "Hi")]  <- RateToProb(ProbToRate(1 - param[param$Unit == "Probability 10-year survival", c("Med", "Hi", "Lo")], t = 1), t = 1/(10 * 52))
 
 ## 5-year survival rate --> probability to die per week
-param[param$Unit == "Probability 5-year survival", c("Med", "Lo", "Hi")]  <- RateToProb(ProbToRate(1 - param[param$Unit == "Probability 5-year survival", c("Med", "Hi", "Lo")]), t = 1/(5 * 52))
+param[param$Unit == "Probability 5-year survival", c("Med", "Lo", "Hi")]  <- RateToProb(ProbToRate(1 - param[param$Unit == "Probability 5-year survival", c("Med", "Hi", "Lo")], t = 1), t = 1/(5 * 52))
 
 ## 3-year survival rate --> probability to die per week
 param[param$Unit == "Probability 3-year survival", c("Med", "Lo", "Hi")]  <- RateToProb(ProbToRate(1 - param[param$Unit == "Probability 3-year survival", c("Med", "Hi", "Lo")], t = 1), 1/(3 * 52))
@@ -65,8 +65,8 @@ param[param$Unit == "Mortality rate per person-year", c("Med","Lo","Hi")] <- par
 
 #### CBS data ####
 #CBS data: prob per year --> prob per week
-cbs$Man_kans   <- RateToProb(ProbToRate(p = cbs$Man_kans),   1/52)
-cbs$Vrouw_kans <- RateToProb(ProbToRate(p = cbs$Vrouw_kans), 1/52)
+cbs$Man_kans   <- RateToProb(ProbToRate(p = cbs$Man_kans, t = 1),   t = 1/52)
+cbs$Vrouw_kans <- RateToProb(ProbToRate(p = cbs$Vrouw_kans, t = 1), t = 1/52)
 
 #CBS data: prob per sex --> average prob
 cbs$prob <- (cbs$Man_kans + cbs$Vrouw_kans) / 2
@@ -135,7 +135,7 @@ for (d in pop_names){
     names(p_vector) <- param_psa$Param  [param_psa$iter == it & param_psa$Population == d]
     
     ##BUILD IN ERROR MESSAGE 
-    # The we make use of 9 parameters. In case we have more then 9 parameter we have two populations with the same name.
+    # The we make use of max 9 parameters. In case we have more then 9 parameter we have two populations with the same name.
     if(length(p_vector) > 9){
       print(paste("There are populations with the same name (",d,")"))
       break
@@ -154,7 +154,7 @@ for (d in pop_names){
                             state_names = state_names,
                             number_cycles = n_cycles, 
                             parameters = p_vector,
-                            cbsdata = cbs)
+                            data = cbs)
     
     # rewards vectors (useful for state rewards)
     v_utility <- numeric(n_s)
