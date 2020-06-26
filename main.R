@@ -210,7 +210,7 @@ for (d in pop_names){
       df_res[df_res$iter == it & df_res$Pop == d & df_res$delay == delay[i], "QALY"] <- QALY[1]
       
       # Calculate the LYs
-      v_tu_ly <- m_trace %*% c(1,1,0)
+      v_tu_ly <- m_trace %*% c(1, 1, 0)
       
       # Apply discount
       LY      <- (t(v_tu_ly) %*%  v_dwe) / n_years
@@ -260,7 +260,7 @@ df_res$AAC_delay_ly[is.nan(df_res$AAC_delay_ly)] <- 0 # Divided by 0 is not rele
 
 # Pool results PSA
 df_res <- data.table(df_res)
-results_pooled <- df_res[,.(QALY_med      = median(QALY),
+df_results_pooled <- df_res[,.(QALY_med      = median(QALY),
                             QALY_lo       = quantile(QALY, probs = 0.025),
                             QALY_hi       = quantile(QALY, probs = 0.975),
                             LY_med        = median(LY),
@@ -275,27 +275,31 @@ results_pooled <- df_res[,.(QALY_med      = median(QALY),
                             AAC_delay_ly_med = median(AAC_delay_ly),
                             AAC_delay_ly_lo  = quantile(AAC_delay_ly, probs = 0.025),
                             AAC_delay_ly_hi  = quantile(AAC_delay_ly, probs = 0.975)),
-                         by = .(Label, delay, Pop)]
-results_pooled$Pop          <- df_res$Pop[match(results_pooled$Label,df_res$Label)]
-results_pooled$Intervention <- df_res$Intervention[match(results_pooled$Label,df_res$Label)]
+                            by = .(Label, delay, Pop)]
+df_results_pooled$Pop          <- df_res$Pop[match(df_results_pooled$Label,df_res$Label)]
+df_results_pooled$Intervention <- df_res$Intervention[match(df_results_pooled$Label, df_res$Label)]
 
 
 # save files in the output folder 
-save(df_res,         file = "output/res_psa.Rdata")
-save(results_pooled, file = "output/psa_pooled.Rdata")
-save(param,          file = "output/input_param.Rdata")
-save(param_psa,      file = "output/psa_parameters.RData")
+save(df_res,            file = "output/res_psa.Rdata")
+save(df_results_pooled, file = "output/psa_pooled.Rdata")
+save(param,             file = "output/input_param.Rdata")
+save(param_psa,         file = "output/psa_parameters.RData")
 
-# plot results of all diseases seperately
-plotPopulationOutcomes(data = results_pooled[results_pooled$delay!=999,],
+# plot results of all diseases seperately 
+# but without the never surgery (delay == 999)
+# using the function plotPopulationOutcomes from the file model.R
+plotPopulationOutcomes(data = df_results_pooled[df_results_pooled$delay!=999, ],
                        folder = "figures/QALY_per_pop/",
                        size_cm = 15) 
 
+
+
 # Calculate the QALY loss per week (the derivative)
 
-# for(p in unique(results_pooled$Label)){
-#   res_derivative <- calculateDerivative(df_pooled = results_pooled[results_pooled$Label==p&
-#                                                                      results_pooled$delay!=999,,], 
+# for(p in unique(df_results_pooled$Label)){
+#   res_derivative <- calculateDerivative(df_pooled = df_results_pooled[df_results_pooled$Label==p&
+#                                                                      df_results_pooled$delay!=999,,], 
 #                                         plot = TRUE, plot_ind = FALSE, cum = FALSE, folder = "figures")
 #   # Make a figure of that derivative
 #   p <- gsub(' ', "_", p) # Replace the space with an unscore
