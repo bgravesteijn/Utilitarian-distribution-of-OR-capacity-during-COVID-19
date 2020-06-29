@@ -533,19 +533,19 @@ desc_df_flatter <- desc_df[desc_df$Label%in%c("ASD, repair",
 desc_df_lin     <- desc_df[!desc_df$Label%in%c(desc_df_flatter$Label, desc_df_steaper$Label), ]
 
 
-plot_descend_steiler <- ggplot(desc_df_steaper, 
+plot_descend_steaper <- ggplot(desc_df_steaper, 
        aes(x = delay, y = QALY_med - std, col = Label)) +
   geom_line(cex = 2) + theme_bw() + theme(legend.position = "bottom", text=element_text(size=18))+
   geom_vline(xintercept = seq(12,42, by = 10), lty = 2)+
   labs(x = "Delay (weeks)", y="QALYs - mean QALYs", col = "Procedure")
-plot_descend_steiler
+plot_descend_steaper
 
-plot_descend_vlakker <- ggplot(desc_df_flatter, 
+plot_descend_flatter <- ggplot(desc_df_flatter, 
        aes(x = delay, y = QALY_med - std, col = Label))+
   geom_line(cex = 2) + theme_bw() + theme(legend.position = "bottom", text=element_text(size = 18))+
   geom_vline(xintercept = seq(12,42, by=10), lty=2)+
   labs(x = "Delay (weeks)", y="QALYs - mean QALYs", col="Procedure")
-plot_descend_vlakker
+plot_descend_flatter
 
 plot_descend_lin <- ggplot(desc_df_lin, 
        aes(x = delay, y = QALY_med - std, col = Label)) +
@@ -557,9 +557,9 @@ plot_descend_lin <- ggplot(desc_df_lin,
 plot_descend_lin
 
 # Save the figures 
-ggsave(plot_descend_vlakker, filename = "../figures/main_results/descend_vlakker.png", device = "png", 
+ggsave(plot_descend_flatter, filename = "../figures/main_results/descend_flatter.png", device = "png", 
        width = 15, height=10)
-ggsave(plot_descend_steiler, filename = "../figures/main_results/descend_steiler.png", device = "png", 
+ggsave(plot_descend_steaper, filename = "../figures/main_results/descend_steaper.png", device = "png", 
        width = 15, height=10)
 ggsave(plot_descend_lin, filename = "../figures/main_results/descend_lin.png", device = "png", 
        width = 15, height=10)
@@ -577,7 +577,7 @@ est_ci_QALY <- matrix(nrow = length(order_populations),
                                       unique(df_results_pooled$delay)))
 # Loop over the diseases, and store the QALYs (est+95% CI) in the matrix
 for(i in order_populations){
-est_ci_QALY[i,] <- paste(sprintf("%.2f",df_results_pooled$QALY_med[df_results_pooled$Label==i]),
+est_ci_QALY[i, ] <- paste(sprintf("%.2f",df_results_pooled$QALY_med[df_results_pooled$Label==i]),
                          " (",
                          sprintf("%.2f",df_results_pooled$QALY_lo[df_results_pooled$Label==i]),
                          " - ",
@@ -1069,6 +1069,7 @@ write.csv2(tbl_cls2, file = "../figures/main_results/evidence_tbl.csv")
 
 # Make code for the "integraal capaciteits management" group
 ```{r}
+delay <- unique(df_results_pooled$delay)
 df_icm <- expand.grid(Pop = unique(df_results_pooled$Label),  # Disease name 
                         QALY_med = NA,
                         QALY_lo = NA,
@@ -1080,6 +1081,8 @@ df_icm <- expand.grid(Pop = unique(df_results_pooled$Label),  # Disease name
 n_weeks_loss <- paste("loss", 1:52, sep = "")
 df_icm <-  cbind(df_icm, setNames( lapply(n_weeks_loss, function(x) x = NA), n_weeks_loss) )
 head(df_icm)
+
+
 
 
 if(sum(unique(df_results_pooled$Label) == bnft$Label)/length(bnft$Label) == 1){
@@ -1101,12 +1104,13 @@ loss_icm <- expand.grid(Label = as.character(unique(df_res$Label)),
                         type    = "QALY")
             
 
-for(p in unique(urg$Label)){
+for(t in 1:(length(delay)-2)){
   # QALYs with minimal delay
   
-  t1 <- delay[1]
-  t2 <- delay[2]
-  delta_t <- t1 - t2
+  for (p in unique(urg$Label)){
+  t1 <- delay[t]
+  t2 <- delay[t+1]
+  delta_t <- t2 - t1
   
   QALY_t1   <- df_res[df_res$Label == p & df_res$delay == t1, ]$QALY
   
@@ -1118,15 +1122,21 @@ for(p in unique(urg$Label)){
   loss_icm[loss_icm$Label == p & loss_icm$type == "QALY", "loss_lo"] <- quantile(QALY_t1 - QALY_t2, probs = 0.025)/delta_t
   loss_icm[loss_icm$Label == p & loss_icm$type == "QALY", "loss_hi"] <- quantile(QALY_t1 - QALY_t2, probs = 0.975)/delta_t
   
-
-  df_icm[df_icm[, (n_weeks_loss[1:t2]) & t1 == 2]] <- loss_icm$loss
-
+  df_icm[, (n_weeks_loss[t1:t2])] <- loss_icm$loss # Only store the mean QALY loss
+  }
 }
 
+df_icm <- df_icm[, -8] # Remove the column with the loss of the first week as loss week 2 is considered surgery now
 
+head(df_icm)
 
 # Save the file 
-write.csv(df_qaly_lpw,            file = "output/df_qaly_lpw.csv")
+write.csv(df_icm, file = "../output/df_icm.csv")
+
+library("xlsx")
+# Write the first data set in a new workbook
+write.xlsx(df_icm, file = "../output/df_icm.xlsx",
+      sheetName = "QALY and loss", append = FALSE)
 ```
 
 
