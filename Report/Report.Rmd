@@ -36,7 +36,7 @@ runModel <- FALSE # Do we want to run the model again? Or just generate the repo
 ```{r, eval = TRUE, echo = FALSE, warnings = FALSE, message = FALSE}
 if (!require('pacman')) install.packages('pacman'); library(pacman) # use this package to conveniently install other packages
 # load (install if required) packages from CRAN
-p_load("here", "dplyr", "devtools", "scales", "ellipse", "ggplot2", "lazyeval", "igraph", "ggraph", "reshape2", "knitr", "citr", "plyr", "stats", "diagram", "EnvStats", "data.table", "gridExtra","ggrepel","tableone")   
+p_load("here", "dplyr", "devtools", "scales", "ellipse", "ggplot2", "lazyeval", "igraph", "ggraph", "reshape2", "knitr", "citr", "plyr", "stats", "diagram", "EnvStats", "data.table", "gridExtra","ggrepel","tableone", "tidyr")   
 
 # load (install if required) packages from GitHub
 # install_github("DARTH-git/dampack", force = TRUE) #Uncomment if there is a newer version
@@ -1069,8 +1069,10 @@ write.csv2(tbl_cls2, file = "../figures/main_results/evidence_tbl.csv")
 
 # Make code for the "integraal capaciteits management" group
 ```{r}
+load("../output/psa_pooled.Rdata")
 delay <- unique(df_results_pooled$delay)
-df_icm <- expand.grid(Pop = unique(df_results_pooled$Label),  # Disease name 
+df_icm <- expand.grid(  PopID = NA,
+                        Pop = unique(df_results_pooled$Label),  # Disease name 
                         QALY_med = NA,
                         QALY_lo = NA,
                         QALY_hi = NA,
@@ -1078,11 +1080,10 @@ df_icm <- expand.grid(Pop = unique(df_results_pooled$Label),  # Disease name
                         bnft_lo = NA,
                         bnft_hi = NA)  
 
-n_weeks_loss <- paste("loss", 1:52, sep = "")
-df_icm <-  cbind(df_icm, setNames( lapply(n_weeks_loss, function(x) x = NA), n_weeks_loss) )
+n_weeks_loss <- paste("loss", 1:52, sep = "") 
+df_icm <-  cbind(df_icm, setNames(lapply(n_weeks_loss, function(x) x = NA), n_weeks_loss))
+df_icm$PopID <- c(1:length(df_icm$Pop)) # Add a population ID
 head(df_icm)
-
-
 
 
 if(sum(unique(df_results_pooled$Label) == bnft$Label)/length(bnft$Label) == 1){
@@ -1095,7 +1096,6 @@ df_icm$bnft_lo  <- bnft$Bnft_lo[bnft$type == "QALY"]
 df_icm$bnft_hi  <- bnft$Bnft_hi[bnft$type == "QALY"]
 }
 
-df_icm[1:6, 1:10] # Print the first part
 
 loss_icm <- expand.grid(Label = as.character(unique(df_res$Label)),
                         loss = NA,
@@ -1109,7 +1109,7 @@ for(t in 1:(length(delay)-2)){
   
   for (p in unique(urg$Label)){
   t1 <- delay[t]
-  t2 <- delay[t+1]
+  t2 <- delay[t + 1]
   delta_t <- t2 - t1
   
   QALY_t1   <- df_res[df_res$Label == p & df_res$delay == t1, ]$QALY
@@ -1126,16 +1126,29 @@ for(t in 1:(length(delay)-2)){
   }
 }
 
-df_icm <- df_icm[, -8] # Remove the column with the loss of the first week as loss week 2 is considered surgery now
 
-head(df_icm)
+df_icm[ , -which(names(df_icm) %in% c("loss1"))] # Remove the column with the loss of the first week as loss week 2 is considered surgery now
+
+
+# Make a long format 
+olddata_wide <- df_icm
+keycol <- "Week"
+valuecol <- "Value"
+gathercols <- c(paste("loss", 2:52, sep = ""))
+
+df_icm_long <- gather_(olddata_wide, keycol, valuecol, gathercols)
+df_icm_long <- df_icm_long[order(df_icm_long$Pop), ] # Order the data 
 
 # Save the file 
 write.csv(df_icm, file = "../output/df_icm.csv")
+write.csv(df_icm, file = "../output/df_icm_long.csv")
 
 library("xlsx")
 # Write the first data set in a new workbook
 write.xlsx(df_icm, file = "../output/df_icm.xlsx",
+      sheetName = "QALY and loss", append = FALSE)
+
+write.xlsx(df_icm, file = "../output/df_icm_long.xlsx",
       sheetName = "QALY and loss", append = FALSE)
 ```
 
@@ -1145,7 +1158,7 @@ The team:
 - The principal investigators of this projects are: R.J. Baatenburg de Jong and H.F. Lingsma
 - The code is written by: B.Y. Gravesteijn and E.M. Krijkamp
 - The research team: 
-Benjamin Gravesteijn, Eline Krijkamp, Jan Busschbach, Geert Geleijnse,  Isabel Retel Helmrich, Sophie Bruinsma, Céline van Lint, Ernest van Veen,  Ewout Steyerberg, Kees Verhoef,  Jan van Saase,  Hester Lingsma, Rob Baatenburg de Jong and collaborations**
+Benjamin Gravesteijn, Eline Krijkamp, Jan Busschbach, Geert Geleijnse,  Isabel Retel Helmrich, Sophie Bruinsma, Céline van Lint, Ernest van Veen,  Ewout Steyerberg, Kees Verhoef, Jan van Saase, Hester Lingsma, Rob Baatenburg de Jong and collaborations**
 
 ** We would like to acknowledge our collaborations Chris Bangma, Ivo Beetz, Patrick Bindels, Alexandra Brandt-Kerkhof, Danielle van Diepen, Clemens Dirven, Tjebbe Galema, Jeanette Goudzwaard, Mieke Hazes, Sjoerd Lagarde, Harmke Polinder-Bos, Eva Maria Roes, Hanneke Takkenberg and Mark van Vledder for active participation in this research. 
 
