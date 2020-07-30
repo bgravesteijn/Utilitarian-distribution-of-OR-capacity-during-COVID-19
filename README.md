@@ -1,7 +1,7 @@
 # Utilitarian-distribution-of-OR-capacity-during-COVID-19
  Github page containing data and code for the published manuscript.
  
-### main.R
+### Main
 The main script, which calls the underlying code from the elsewhere in the repository.
  
 ### Data
