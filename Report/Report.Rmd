@@ -851,8 +851,8 @@ The data which G. Geleijnse extracted from Hix, can be used to optimize OR time.
 
 ```{r coupling,echo = FALSE, out.width='100%' , fig.align = "center"}
 #Load in capacity data
-cpcty  <- data.frame(readxl::read_xlsx("../data/HIX_data.xlsx"))
-key.df <- data.frame(readxl::read_xlsx("../data/Sleutellijst_hix_onzedata.xlsx"))
+cpcty  <- data.frame(readxl::read_xlsx("../../OR decision model/Data/HIX_data.xlsx"))
+key.df <- data.frame(readxl::read_xlsx("../../OR decision model/Data/Sleutellijst_hix_onzedata.xlsx"))
 
 ## FOR transplantations: add the duration of the OR of the donor to the one from the receiver
 cpcty$duration_or_lo[cpcty$Hix_label=="Niertransplantatie traj ontv"] <- cpcty$duration_or_lo[cpcty$Hix_label=="Niertransplantatie traj donor"]+
