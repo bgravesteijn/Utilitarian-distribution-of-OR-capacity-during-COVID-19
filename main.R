@@ -105,11 +105,13 @@ df_res <- expand.grid(iter = 1:n_iter,                  # PSA iteration
                       Pop = unique(param$Population),   # Disease name 
                       delay = delay,                    # time of delay
                       QALY = NA,                        # QALYs
+                      DALY = NA,                        # DALYs
                       LY = NA,                          # LY: qol=1
+                      YLL = NA,                         # Years of life lost
                       AAC = NA,
                       AAC_ly = NA,# Area above the curve (the loss in QALYs)
                       AAC_delay = NA,
-                      AAC_delay_ly = NA)                # AAC/delay       
+                      AAC_delay_ly = NA)                # AAC/delay        
 
 # Add the surgeries/labels per population in the intervention column
 df_res$Intervention <- param$Intervention[match(df_res$Pop, param$Population)]
@@ -209,6 +211,14 @@ for (d in pop_names){
       # Store discounted total QALY result 
       df_res[df_res$iter == it & df_res$Pop == d & df_res$delay == delay[i], "QALY"] <- QALY[1]
       
+      # DALYs
+      if(i==1){
+        df_res[df_res$iter==it & df_res$Pop == d & df_res$delay == delay[i], "DALY"] <- 0  
+      }else{
+        df_res[df_res$iter==it & df_res$Pop == d & df_res$delay == delay[i], "DALY"] <- 
+          df_res[df_res$iter == it & df_res$Pop == d & df_res$delay == delay[1], "QALY"] - QALY[1]
+      }
+      
       # Calculate the LYs
       v_tu_ly <- m_trace %*% c(1, 1, 0)
       
@@ -217,6 +227,14 @@ for (d in pop_names){
       
       #Store in results
       df_res[df_res$iter == it & df_res$Pop == d & df_res$delay == delay[i], "LY"] <- LY
+      
+      #YLL
+      if(i==1){
+        df_res[df_res$iter==it & df_res$Pop == d & df_res$delay == delay[i], "YLL"] <- 0  
+      }else{
+        df_res[df_res$iter==it & df_res$Pop == d & df_res$delay == delay[i], "YLL"] <- 
+          df_res[df_res$iter == it & df_res$Pop == d & df_res$delay == delay[1], "LY"] - LY
+      }
       
       # Calculate the area above the curve for QALYs 
       area.total <- df_res[df_res$Pop == d & df_res$iter == it, ]$QALY[1] * (delay[i]-2)
@@ -260,12 +278,18 @@ df_res$AAC_delay_ly[is.nan(df_res$AAC_delay_ly)] <- 0 # Divided by 0 is not rele
 
 # Pool results PSA
 df_res <- data.table(df_res)
-df_results_pooled <- df_res[,.(QALY_med      = median(QALY),
+results_pooled <- df_res[,.(QALY_med      = median(QALY),
                             QALY_lo       = quantile(QALY, probs = 0.025),
                             QALY_hi       = quantile(QALY, probs = 0.975),
+                            DALY_med      = median(DALY),
+                            DALY_lo       = quantile(DALY, probs = 0.025),
+                            DALY_hi       = quantile(DALY, probs = 0.975),
                             LY_med        = median(LY),
                             LY_lo         = quantile(LY, probs = 0.025),
                             LY_hi         = quantile(LY, probs = 0.975),
+                            YLL_med        = median(YLL),
+                            YLL_lo         = quantile(YLL, probs = 0.025),
+                            YLL_hi         = quantile(YLL, probs = 0.975),
                             AAC_med       = median(AAC),
                             AAC_lo        = quantile(AAC, probs = 0.025),
                             AAC_hi        = quantile(AAC, probs = 0.975),
@@ -275,21 +299,20 @@ df_results_pooled <- df_res[,.(QALY_med      = median(QALY),
                             AAC_delay_ly_med = median(AAC_delay_ly),
                             AAC_delay_ly_lo  = quantile(AAC_delay_ly, probs = 0.025),
                             AAC_delay_ly_hi  = quantile(AAC_delay_ly, probs = 0.975)),
-                            by = .(Label, delay, Pop)]
-df_results_pooled$Pop          <- df_res$Pop[match(df_results_pooled$Label,df_res$Label)]
-df_results_pooled$Intervention <- df_res$Intervention[match(df_results_pooled$Label, df_res$Label)]
-
+                         by = .(Label, delay, Pop)]
+results_pooled$Pop          <- df_res$Pop[match(results_pooled$Label,df_res$Label)]
+results_pooled$Intervention <- df_res$Intervention[match(results_pooled$Label, df_res$Label)]
 
 # save files in the output folder 
 save(df_res,            file = "output/res_psa.Rdata")
-save(df_results_pooled, file = "output/psa_pooled.Rdata")
+save(results_pooled, file = "output/psa_pooled.Rdata")
 save(param,             file = "output/input_param.Rdata")
 save(param_psa,         file = "output/psa_parameters.RData")
 
 # plot results of all diseases seperately 
 # but without the never surgery (delay == 999)
 # using the function plotPopulationOutcomes from the file model.R
-plotPopulationOutcomes(data = df_results_pooled[df_results_pooled$delay!=999, ],
+plotPopulationOutcomes(data = results_pooled[results_pooled$delay!=999, ],
                        folder = "figures/QALY_per_pop/",
                        size_cm = 15) 
 

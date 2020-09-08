@@ -201,36 +201,32 @@ calculateDerivative <- function(df_pooled, plot = FALSE, plot_ind = FALSE, cum =
 
 plotPopulationOutcomes <- function(data, folder = "figures/", size_cm = 10){
   # Arguments:
-  ## data:   pooled results
+  ## data: pooled results
   ## folder: folder where figures are stored
-  # Returns:
-  ## Figures of the outcome of each diseas
   
-  pop_names <- sort(unique(data$Label))  # select the population names and sort on alphabetic order
+  pop_names <- sort(unique(data$Label))
   
-  # make new names, population and interventions separate 
+  # nieuwe naam maken
   data$name <- paste(data$Pop, "\n",data$Intervention)
-
-  # Create a figure of the QALYs with confidence interval of the PSA
+  
+  # Create a figure of the DALYs with confidence interval of the PSA
   for (d in 1:length(pop_names)) {
-    avg_y     <- median(as.numeric(data$QALY_med[data$Label == pop_names[d]]))
-    
-    plot_QALY <- ggplot(data[data$Label == pop_names[d], ], aes(x = delay, y = QALY_med, ymin = QALY_lo, ymax = QALY_hi)) + 
+    # Plot
+    avg_y <- median(as.numeric(data$DALY_med[data$Label == pop_names[d]]))
+    plot_DALY <- ggplot(data[data$Label == pop_names[d],], aes(x = delay, y = DALY_med, ymin = DALY_lo, ymax = DALY_hi)) + 
       geom_ribbon(alpha = 0.4) +
       geom_line(cex = 2) +
       facet_wrap(~ name) +
       xlab("Delay (weeks)") +
-      ylab("QALY") +
-      scale_y_continuous(limits = c(avg_y - 11,
-                                    avg_y + 11)) +
+      ylab("DALY") +
+      scale_y_continuous(limits = c(0,
+                                    4.5))+
       theme_bw() +
       theme(text = element_text(size = 16), 
             strip.text = element_text(size = 16))
-    
     p <- gsub(' ', "_", pop_names[d]) # Replace the spaces with an underscore to save the file
-    # save the figure
-    ggsave(filename = paste(folder,p,"_QALY.png", sep = ""),
-           plot = plot_QALY, device = "png", 
+    ggsave(filename = paste(folder,p,"_DALY.png", sep = ""),
+           plot = plot_DALY, device = "png", 
            height = size_cm, width = size_cm, units = "cm")
   }
 }
