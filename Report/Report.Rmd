@@ -476,8 +476,7 @@ order_interventions <- as.character(urg_DALY$Intervention[order(urg_DALY$urg, de
 
 desc_df <- results_pooled[results_pooled$delay != 999, ]
 
-desc_df_steaper <- desc_df[desc_df$Label%in%c("Instable AP, CABG",
-                                              "AAA, surgical repair", 
+desc_df_steaper <- desc_df[desc_df$Label%in%c("Instable AP, CABG", 
                                               "Carotid endarterectomy"),]
 
 desc_df_flatter <- desc_df[desc_df$Label%in%c("ASD, repair",
