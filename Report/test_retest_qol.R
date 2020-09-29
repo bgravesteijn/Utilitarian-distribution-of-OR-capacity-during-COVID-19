@@ -21,7 +21,7 @@ library(BlandAltmanLeh)
 x <- bland.altman.plot(group1 = u_d2, group2 = u_d1, 
                   graph.sys = "ggplot2")
 y <- x+theme_bw()+geom_hline(yintercept = 0)+labs(x="Mean of QoL scored at two sessions",
-                                             y="Mean of QoL scored at two sessions")+
+                                             y="Difference in QoL scored at two sessions")+
   theme(text=element_text(size=16))+geom_point(cex=3)
 y
 ggsave(y, filename = "figures/main_results/ba_plot_qol.tiff", device = "tiff")

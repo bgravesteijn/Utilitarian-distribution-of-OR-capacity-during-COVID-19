@@ -305,7 +305,7 @@ results_pooled$Intervention <- df_res$Intervention[match(results_pooled$Label, d
 
 # save files in the output folder 
 save(df_res,            file = "output/res_psa.Rdata")
-save(results_pooled, file = "output/psa_pooled.Rdata")
+save(results_pooled,    file = "output/psa_pooled.Rdata")
 save(param,             file = "output/input_param.Rdata")
 save(param_psa,         file = "output/psa_parameters.RData")
 
