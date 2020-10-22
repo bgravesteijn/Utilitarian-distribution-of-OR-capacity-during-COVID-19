@@ -622,39 +622,41 @@ bnft2$Label <- factor(bnft2$Label, levels = rev(order_populations))
 ## part of DALY that is LY
 
 
-bnft2$Bnft[bnft2$type=="YLL"]    <- -bnft2$Bnft[bnft2$type=="YLL"]
-bnft2$Bnft_lo[bnft2$type=="YLL"] <- -bnft2$Bnft_lo[bnft2$type=="YLL"]
-bnft2$Bnft_hi[bnft2$type=="YLL"] <- -bnft2$Bnft_hi[bnft2$type=="YLL"]
+bnft2$Bnft   [bnft2$type == "YLL"] <- -bnft2$Bnft   [bnft2$type == "YLL"]
+bnft2$Bnft_lo[bnft2$type == "YLL"] <- -bnft2$Bnft_lo[bnft2$type == "YLL"]
+bnft2$Bnft_hi[bnft2$type == "YLL"] <- -bnft2$Bnft_hi[bnft2$type == "YLL"]
 
 bnft2[bnft2$type=="DALY",c("Bnft","Bnft_lo","Bnft_hi")][bnft2[bnft2$type=="DALY",c("Bnft","Bnft_lo","Bnft_hi")]>0] <- 0
 bnft2[bnft2$type=="YLL",c("Bnft","Bnft_lo","Bnft_hi")][bnft2[bnft2$type=="YLL",c("Bnft","Bnft_lo","Bnft_hi")]<0] <- 0
 
-breaks <- -11:11
+# NOTE: The limit of the breaks might be better coded using the rounded value of the Bnft_hi value. 
+breaks <- -15:15
 names(breaks) <- abs(breaks)
-bnft2$type <- factor(bnft2$type, levels=c("DALY","YLL"))
-bnft_v2 <- ggplot(bnft2, aes(x = Label, y = Bnft, ymin=Bnft_lo, ymax=Bnft_hi)) +
-  geom_col(alpha=0.6) +
+bnft2$type <- factor(bnft2$type, levels = c("DALY","YLL"))
+
+bnft_v2 <- ggplot(bnft2, aes(x = Label, y = Bnft, ymin = Bnft_lo, ymax = Bnft_hi )) +
+  geom_col(alpha = 0.6) +
   geom_linerange()+
   geom_hline(yintercept = 0, colour = "black") +
   facet_wrap_custom(~type, scales = "free_x", scale_overrides = list(
-    scale_override(1, scale_y_continuous(limits = c(-11,0),
-                                         breaks = seq(from = -11, to = 0,by = 1),
-                                         labels = seq(from = 11,  to = 0,by = -1), 
+    scale_override(1, scale_y_continuous(limits = c(-15,0),
+                                         breaks = seq(from = -15, to = 0, by = 1),
+                                         labels = seq(from = 15,  to = 0, by = -1), 
                      expand = c(0, 0))),
-    scale_override(2, scale_y_continuous(limits = c(0, 11),
-                                         breaks = seq(from = 0, to = 11,by = 1),
-                                         labels = seq(from = 0,  to = 11,by = 1), 
+    scale_override(2, scale_y_continuous(limits = c(0, 15),
+                                         breaks = seq(from = 0, to = 15, by = 1),
+                                         labels = seq(from = 0, to = 15, by = 1), 
                      expand = c(0, 0)))
   ))+
   coord_flip()+
   theme_bw() +
   theme(panel.spacing.x = unit(0, "pt"), 
         strip.background = element_rect(colour = "black"),
-        text=element_text(size=18))+
-  labs(y="Associated with no surgery",x="Surgery")
+        text = element_text(size = 18))+
+  labs(y = "Associated with no surgery", x = "Surgery")
 
 bnft_v2
-ggsave(bnft_v2,filename = "../figures/main_results/bnft_v2.png", width=15, height=10)
+ggsave(bnft_v2,filename = "../figures/main_results/bnft_v2.png", width = 15, height = 10)
 ggsave(bnft_v2,filename = "../../OR-decision-model/Manuscript/Submissions/Value in Health/Revision 1/Fig3.png", width=15, height=10)
 
 ```
