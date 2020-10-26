@@ -303,23 +303,23 @@ levels(plotpsa.df$Param) <- c("Age","QoL","QoL","Survival","Survival", "Time unt
 plotpsa.df$Label <- factor(plotpsa.df$Label)
 plotpsa.df$Label <- factor(plotpsa.df$Label, levels = rev(levels(plotpsa.df$Label)))
 
-#Make the plot
+#Make the plot of the parametes values as used in the PSA dataset
 plot_psa <- ggplot(plotpsa.df, 
-                       aes(x=Label, y=psa_est, fill=tx))+
-  geom_boxplot(alpha=0.8)+
-  labs(x="",y="PSA estimates", fill="Treatment")+
-  facet_wrap(~Param, scales = "free_x", nrow=1)+
-  scale_y_log10()+
-  coord_flip()+
-  theme_bw()+
-  theme(text=element_text(size=15))+
-  scale_fill_manual(values = c("salmon2","seagreen", "Grey"))+
-  theme(text=element_text(size=22),legend.position = "bottom")
+                       aes(x = Label, y = psa_est, fill = tx))+
+  geom_boxplot(alpha = 0.8) +
+  labs(x = "", y = "Distribution of parameter value PSA", fill = "Treatment") +
+  facet_wrap(~ Param, scales = "free_x", nrow = 1) +
+  scale_y_log10() +
+  coord_flip() +
+  theme_bw() +
+  theme(text = element_text(size = 15))+
+  scale_fill_manual(values = c("salmon2", "seagreen", "Grey"))+
+  theme(text = element_text(size = 22), legend.position = "bottom")
 
 #Save the plot
 ggsave(plot_psa, 
-       device="png", file="../figures/main_results/psa_est.png", 
-       width=50, height=35, units="cm")
+       device = "png", file = "../figures/main_results/psa_est.png", 
+       width = 50, height = 35, units = "cm")
 
 ggsave(plot_psa, 
        device="png", file="../../OR-decision-model/Manuscript/Submissions/Value in Health/Revision 1/Fig2.png", 
