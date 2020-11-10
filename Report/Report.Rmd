@@ -298,7 +298,7 @@ plotpsa.df$tx <- factor(plotpsa.df$tx)
 plotpsa.df$tx <- factor(plotpsa.df$tx, levels = c("Without treatment", "With treatment","Either"))
 
 plotpsa.df$Param <- factor(plotpsa.df$Param)
-levels(plotpsa.df$Param) <- c("Age","QoL","QoL","Survival","Survival", "Time untill no Survival effect")
+levels(plotpsa.df$Param) <- c("Age", "QoL", "QoL", "Survival", "Survival", "Time untill no Survival effect")
 
 plotpsa.df$Label <- factor(plotpsa.df$Label)
 plotpsa.df$Label <- factor(plotpsa.df$Label, levels = rev(levels(plotpsa.df$Label)))
@@ -307,7 +307,7 @@ plotpsa.df$Label <- factor(plotpsa.df$Label, levels = rev(levels(plotpsa.df$Labe
 plot_psa <- ggplot(plotpsa.df, 
                        aes(x = Label, y = psa_est, fill = tx))+
   geom_boxplot(alpha = 0.8) +
-  labs(x = "", y = "Distribution of parameter value PSA", fill = "Treatment") +
+  labs(x = "", y = "Distribution of parameter value for PSA", fill = "Treatment") +
   facet_wrap(~ Param, scales = "free_x", nrow = 1) +
   scale_y_log10() +
   coord_flip() +
@@ -320,11 +320,13 @@ plot_psa <- ggplot(plotpsa.df,
 ggsave(plot_psa, 
        device = "png", file = "../figures/main_results/psa_est.png", 
        width = 50, height = 35, units = "cm")
+```
 
+```{r, eval = FALSE, echo = FALSE, fig.width = 25, fig.height = 25}
+# set on TRUE to store the figures in the correct folder for the revisio
 ggsave(plot_psa, 
-       device="png", file="../../OR-decision-model/Manuscript/Submissions/Value in Health/Revision 1/Fig2.png", 
-       width=50, height=35, units="cm")
-  
+       device = "png", file="../../OR-decision-model/Manuscript/Submissions/Value in Health/Revision 1/Fig2.png", 
+       width = 50, height = 35, units = "cm")
 ```
 
 
@@ -657,7 +659,11 @@ bnft_v2 <- ggplot(bnft2, aes(x = Label, y = Bnft, ymin = Bnft_lo, ymax = Bnft_hi
 
 bnft_v2
 ggsave(bnft_v2,filename = "../figures/main_results/bnft_v2.png", width = 15, height = 10)
-ggsave(bnft_v2,filename = "../../OR-decision-model/Manuscript/Submissions/Value in Health/Revision 1/Fig3.png", width=15, height=10)
+```
+
+```{r, eval = FALSE}
+# Set to true to store the figure in the 
+ggsave(bnft_v2,filename = "../../OR-decision-model/Manuscript/Submissions/Value in Health/Revision 1/Fig_appendixB.png", width = 15, height = 10)
 
 ```
 
@@ -682,9 +688,9 @@ plot_main <- ggplot(urg,
 
 plot_main
 
-ggsave(plot_main, filename = "../figures/main_results/loss_pw.png",device = "png", width = 15, height = 15)
-
+ggsave(plot_main, filename = "../figures/main_results/loss_pw.png", device = "png", width = 15, height = 15)
 ```
+
 
 ```{r}
 # Make an new urg df, which we can modify
@@ -730,11 +736,13 @@ urg_v2 <- ggplot(urg2, aes(x = Label, y = urg, ymin=urg_lo, ymax=urg_hi)) +
   theme(panel.spacing.x = unit(0, "pt"), 
         strip.background = element_rect(colour = "black"),
         text=element_text(size=18))+
-  labs(y="Per month delay",x="Surgery")
+  labs(y = "Per month delay",x="Surgery")
 
 urg_v2
-ggsave(urg_v2,filename = "../figures/main_results/urg_v2.png", width=15, height=10)
-ggsave(urg_v2,filename = "../../OR-decision-model/Manuscript/Submissions/Value in Health/Revision 1/Fig4.png", width=15, height=10)
+ggsave(urg_v2,filename = "../figures/main_results/urg_v2.png", width = 15, height = 10)
+
+
+#ggsave(urg_v2,filename = "../../OR-decision-model/Manuscript/Submissions/Value in Health/Revision 1/Fig3.png", width = 15, height = 10)
 
 ```
 
@@ -753,7 +761,7 @@ order_patients    <- as.vector(order_patients)
 for(i in 1:length(order_populations)){
   p <- order_populations[i]
   p <- gsub(" ", "_", p)
- all_images_DALY[i] <- (paste("../figures/QALY_per_pop/",p,"_DALY.png", sep = ""))
+ all_images_DALY[i] <- (paste("../figures/QALY_per_pop/", p, "_DALY.png", sep = ""))
 }
 
 
