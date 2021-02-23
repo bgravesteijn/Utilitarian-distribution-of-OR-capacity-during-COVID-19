@@ -179,7 +179,7 @@ To run the model we make use of some packages which can be downloaded from CRAN 
 ```{r, eval = FALSE, echo = TRUE, warnings = FALSE, message = FALSE}
 if (!require('pacman')) install.packages('pacman'); library(pacman) # use this package to conveniently install other packages
 # load (install if required) packages from CRAN
-p_load("here", "dplyr", "devtools", "scales", "ellipse", "ggplot2", "lazyeval", "igraph", "ggraph", "reshape2", "knitr", "citr", "plyr", "stats", "diagram", "EnvStats")   
+p_load("here", "dplyr", "devtools", "scales", "ellipse", "ggplot2", "lazyeval", "igraph", "ggraph", "reshape2", "knitr", "citr", "plyr", "stats", "diagram", "EnvStats", "data.table")   
 
 # load (install if required) packages from GitHub
 # install_github("DARTH-git/dampack", force = TRUE) #Uncomment if there is a newer version
@@ -288,14 +288,19 @@ write.csv2(param_psa_summary, file = "../figures/main_results/res_psa.csv")
 
 The following figures show the input parameters of all diseases in forest plots.
 ```{r, echo = FALSE, fig.width = 25, fig.height = 25}
-plotpsa.df <- param_psa[!param_psa$Param%in%c("Time_noeff_QoL","Tx_eff"),]
+plotpsa.df <- param_psa[!param_psa$Param %in% c("Time_noeff_QoL", "Tx_eff"), ]
 
 #adjust so that notx and tx are different
-plotpsa.df$tx <- ifelse(plotpsa.df$Param%in%c("Surv_no_tx","QoL_no_tx"),"Without treatment",
-                        ifelse(plotpsa.df$Param%in%c("Surv_tx","QoL_tx"),"With treatment",
+plotpsa.df$tx <- ifelse(plotpsa.df$Param %in% c("Surv_no_tx", "QoL_no_tx"),
+                        "Without treatment",
+                        ifelse(plotpsa.df$Param %in% c("Surv_tx","QoL_tx"),
+                               "With treatment",
                                "Either"))
+
 plotpsa.df$tx <- factor(plotpsa.df$tx)
-plotpsa.df$tx <- factor(plotpsa.df$tx, levels = c("Without treatment", "With treatment","Either"))
+plotpsa.df$tx <- factor(plotpsa.df$tx, levels = c("Without treatment", 
+                                                  "With treatment", 
+                                                  "Either"))
 
 plotpsa.df$Param <- factor(plotpsa.df$Param)
 levels(plotpsa.df$Param) <- c("Age", "QoL", "QoL", "Survival", "Survival", "Time untill no Survival effect")
@@ -303,17 +308,17 @@ levels(plotpsa.df$Param) <- c("Age", "QoL", "QoL", "Survival", "Survival", "Time
 plotpsa.df$Label <- factor(plotpsa.df$Label)
 plotpsa.df$Label <- factor(plotpsa.df$Label, levels = rev(levels(plotpsa.df$Label)))
 
-#Make the plot of the parametes values as used in the PSA dataset
+#Make the plot of the parameters values as used in the PSA dataset
 plot_psa <- ggplot(plotpsa.df, 
-                       aes(x = Label, y = psa_est, fill = tx))+
+                       aes(x = Label, y = psa_est, fill = tx)) +
   geom_boxplot(alpha = 0.8) +
   labs(x = "", y = "Distribution of parameter value for PSA", fill = "Treatment") +
   facet_wrap(~ Param, scales = "free_x", nrow = 1) +
   scale_y_log10() +
   coord_flip() +
   theme_bw() +
-  theme(text = element_text(size = 15))+
-  scale_fill_manual(values = c("salmon2", "seagreen", "Grey"))+
+  theme(text = element_text(size = 15)) +
+  scale_fill_manual(values = c("salmon2", "seagreen", "Grey")) +
   theme(text = element_text(size = 22), legend.position = "bottom")
 
 #Save the plot
@@ -323,9 +328,9 @@ ggsave(plot_psa,
 ```
 
 ```{r, eval = FALSE, echo = FALSE, fig.width = 25, fig.height = 25}
-# set on TRUE to store the figures in the correct folder for the revisio
+# set on TRUE to store the figures in the correct folder for the revision
 ggsave(plot_psa, 
-       device = "png", file="../../OR-decision-model/Manuscript/Submissions/Value in Health/Revision 1/Fig2.png", 
+       device = "png", file = "../../OR-decision-model/Manuscript/Submissions/Value in Health/Revision 1/Fig2.png", 
        width = 50, height = 35, units = "cm")
 ```
 
@@ -339,11 +344,11 @@ state_names <- c("Preop", "Postop", "Dead")  # names of health states
 n_s         <- length(state_names)           # lenght of the health states
 
 m_P <- matrix(0, nrow = n_s, ncol = n_s, dimnames = list(state_names, state_names))
-m_P["Preop", "Preop"] <- 0.80
-m_P["Preop", "Dead"] <- 0.20
+m_P["Preop",  "Preop"]  <- 0.80
+m_P["Preop",  "Dead"]   <- 0.20
 m_P["Postop", "Postop"] <- 0.95
-m_P["Postop", "Dead"] <- 0.05
-m_P["Dead", "Dead"]   <- 1
+m_P["Postop", "Dead"]   <- 0.05
+m_P["Dead",   "Dead"]   <- 1
 
 print(m_P)
 ``` 
@@ -395,70 +400,86 @@ bnft <- expand.grid(Label = as.character(unique(df_res$Label)),
                     Bnft      = NA,
                     Bnft_lo   = NA,
                     Bnft_hi   = NA,
-                    type      = c("YLL","DALY"))
+                    type      = c("YLL", "DALY"))
 
 bnft$Pop          <- as.character(unique(df_res$Pop))
-bnft$Intervention <- as.character(df_res$Intervention[seq(from = 1, to = length(df_res$Intervention), by= length(unique(param_psa$iter)) * length(unique(df_res$delay)))])
+bnft$Intervention <- as.character(df_res$Intervention[seq(from = 1, 
+                                                          to = length(df_res$Intervention),
+                                                          by = length(unique(param_psa$iter)) * length(unique(df_res$delay)))])
 
 for(p in unique(bnft$Label)){
-  # DALYs with minimal delay
-  DALY2   <- df_res[df_res$Label==p&df_res$delay==2,]$DALY
+  # DALYs with minimal delay = 2 weeks
+  DALY2   <- df_res[df_res$Label == p & df_res$delay == 2, ]$DALY
   
   # DALYs without surgery
-  DALY999 <- df_res[df_res$Label==p&df_res$delay==999,]$DALY
+  DALY999 <- df_res[df_res$Label == p & df_res$delay == 999, ]$DALY
   
   # Calculate benefit
-  bnft[bnft$Label==p&bnft$type=="DALY","Bnft"] <- quantile(DALY2-DALY999, probs=0.5)
+  bnft[bnft$Label == p & bnft$type == "DALY", "Bnft"]    <- quantile(DALY2 - DALY999, 
+                                                                  probs = 0.5)
   
-  bnft[bnft$Label==p&bnft$type=="DALY","Bnft_lo"] <- quantile(DALY2-DALY999, probs=0.025)
+  bnft[bnft$Label == p & bnft$type == "DALY", "Bnft_lo"] <- quantile(DALY2 - DALY999,
+                                                                     probs = 0.025)
   
-  bnft[bnft$Label==p&bnft$type=="DALY","Bnft_hi"] <- quantile(DALY2-DALY999, probs=0.975)
+  bnft[bnft$Label == p & bnft$type == "DALY", "Bnft_hi"] <- quantile(DALY2 - DALY999, 
+                                                              probs = 0.975)
   
   # LYs with minimal delay
-  YLL2   <- df_res[df_res$Label==p&df_res$delay==2,]$YLL
+  YLL2   <- df_res[df_res$Label == p & df_res$delay == 2, ]$YLL
   
-  # DALYs without surgery
-  YLL999 <- df_res[df_res$Label==p&df_res$delay==999,]$YLL
+  # LYs without surgery
+  YLL999 <- df_res[df_res$Label == p & df_res$delay == 999, ]$YLL
   
   # Calculate benefit
-  bnft[bnft$Label==p&bnft$type=="YLL","Bnft"]    <- quantile(YLL2-YLL999, probs=0.5)
-  bnft[bnft$Label==p&bnft$type=="YLL","Bnft_lo"] <- quantile(YLL2-YLL999, probs=0.025)
-  bnft[bnft$Label==p&bnft$type=="YLL","Bnft_hi"] <- quantile(YLL2-YLL999, probs=0.975)
+  bnft[bnft$Label == p & bnft$type == "YLL", "Bnft"]    <- quantile(YLL2 - YLL999,
+                                                                    probs = 0.5)
+  bnft[bnft$Label == p & bnft$type == "YLL", "Bnft_lo"] <- quantile(YLL2 - YLL999,
+                                                                    probs = 0.025)
+  bnft[bnft$Label == p & bnft$type == "YLL", "Bnft_hi"] <- quantile(YLL2 - YLL999,
+                                                                    probs = 0.975)
  }
 
-#urgency
+# Urgency
 urg <- expand.grid(Label = as.character(unique(df_res$Label)),
-                      urg = NA,
-                      urg_lo = NA,
-                      urg_hi = NA,
-                   type      = c("DALY","YLL"))
+                     urg = NA,
+                  urg_lo = NA,
+                  urg_hi = NA,
+                   type  = c("DALY", "YLL"))
             
 
 urg$Pop          <- as.character(unique(df_res$Pop))
-urg$Intervention <- as.character( df_res$Intervention[seq(from = 1, to = length(df_res$Intervention), by= length(unique(param_psa$iter)) * length(unique(df_res$delay)))])
+urg$Intervention <- as.character( df_res$Intervention[seq(from = 1, 
+                                                          to = length(df_res$Intervention),
+                                                          by = length(unique(param_psa$iter)) * length(unique(df_res$delay)))])
 
 for(p in unique(urg$Label)){
   # DALYs with minimal delay
-  DALY2   <- df_res[df_res$Label==p&df_res$delay==2,]$DALY
+  DALY2   <- df_res[df_res$Label == p & df_res$delay == 2, ]$DALY
   
   # DALYs with maximal delay
-  DALY52 <- df_res[df_res$Label==p&df_res$delay==52,]$DALY
+  DALY52 <- df_res[df_res$Label == p & df_res$delay == 52, ]$DALY
   
   # Calculate slope
-  urg[urg$Label==p&urg$type=="DALY","urg"]    <- quantile(DALY2-DALY52, probs=0.5)/50*52/12
-  urg[urg$Label==p&urg$type=="DALY","urg_lo"] <- quantile(DALY2-DALY52, probs=0.025)/50*52/12
-  urg[urg$Label==p&urg$type=="DALY","urg_hi"] <- quantile(DALY2-DALY52, probs=0.975)/50*52/12
+  urg[urg$Label == p & urg$type == "DALY", "urg"] <- quantile(DALY2 - DALY52,
+                                                              probs = 0.5)/50*52/12
+  urg[urg$Label == p & urg$type == "DALY", "urg_lo"] <- quantile(DALY2 - DALY52,
+                                                                 probs = 0.025)/50*52/12
+  urg[urg$Label == p & urg$type == "DALY", "urg_hi"] <- quantile(DALY2 - DALY52,
+                                                                 probs = 0.975)/50*52/12
   
-  # YLLs with minimal delay
-  YLL2   <- df_res[df_res$Label==p&df_res$delay==2,]$YLL
+  # YLLs with minimal delay, 2 weeks
+  YLL2   <- df_res[df_res$Label == p & df_res$delay == 2, ]$YLL
   
-  # DALYs with maximal delay
-  YLL52 <- df_res[df_res$Label==p&df_res$delay==52,]$YLL
+  # YLLs with maximal delay, 52 weeks
+  YLL52 <- df_res[df_res$Label == p & df_res$delay == 52, ]$YLL
   
   # Calculate benefit
-  urg[urg$Label==p&urg$type=="YLL","urg"]    <- quantile(YLL2-YLL52, probs=0.5)/50*52/12
-  urg[urg$Label==p&urg$type=="YLL","urg_lo"] <- quantile(YLL2-YLL52, probs=0.025)/50*52/12
-  urg[urg$Label==p&urg$type=="YLL","urg_hi"] <- quantile(YLL2-YLL52, probs=0.975)/50*52/12
+  urg[urg$Label == p & urg$type == "YLL", "urg"]    <- quantile(YLL2 - YLL52,
+                                                                probs = 0.5)/50*52/12
+  urg[urg$Label == p & urg$type == "YLL", "urg_lo"] <- quantile(YLL2 - YLL52,
+                                                                probs = 0.025)/50*52/12
+  urg[urg$Label == p & urg$type == "YLL", "urg_hi"] <- quantile(YLL2 - YLL52,
+                                                                probs = 0.975)/50*52/12
 }
 
 #Extract the right order of presentation
@@ -498,38 +519,44 @@ desc_df_flatter <- desc_df[desc_df$Label%in%c("ASD, repair",
                                               "Penis ca., resection",
                                               "Liver metastasis colonca, resection"), ]
 
-desc_df_lin     <- desc_df[!desc_df$Label%in%c(desc_df_flatter$Label, desc_df_steaper$Label), ]
+desc_df_lin     <- desc_df[!desc_df$Label %in% c(desc_df_flatter$Label, desc_df_steaper$Label), ]
 
 plot_descend_steaper <- ggplot(desc_df_steaper, 
        aes(x = delay, y = DALY_med, col = Label)) +
-  geom_line(cex = 2) + theme_bw() + theme(legend.position = "bottom", text=element_text(size=18))+
-  geom_vline(xintercept = seq(12,42, by = 10), lty = 2)+
-  labs(x="Delay (weeks)", y="DALYs", col="Procedure")
+  geom_line(cex = 2) + 
+  theme_bw() + 
+  theme(legend.position = "bottom", text=element_text(size = 18)) +
+  geom_vline(xintercept = seq(12, 42, by = 10), lty = 2) +
+  labs(x = "Delay (weeks)", y = "DALYs", col = "Procedure")
+
 plot_descend_steaper
 
 plot_descend_flatter <- ggplot(desc_df_flatter, 
-       aes(x = delay, y = DALY_med, col = Label))+
-  geom_line(cex = 2) + theme_bw() + theme(legend.position = "bottom", text=element_text(size = 18))+
-  geom_vline(xintercept = seq(12,42, by=10), lty=2)+
-  labs(x="Delay (weeks)", y="DALYs", col="Procedure")
+       aes(x = delay, y = DALY_med, col = Label)) +
+  geom_line(cex = 2) + 
+  theme_bw() + 
+  theme(legend.position = "bottom", text=element_text(size = 18)) +
+  geom_vline(xintercept = seq(12, 42, by = 10), lty = 2) +
+  labs(x = "Delay (weeks)", y = "DALYs", col = "Procedure")
+
 plot_descend_flatter
 
 plot_descend_lin <- ggplot(desc_df_lin, 
        aes(x = delay, y = DALY_med, col = Label)) +
-  geom_line(cex = 2)+
-  theme_bw()+
-  theme(legend.position = "bottom", text=element_text(size = 18))+
-  geom_vline(xintercept = seq(12,42, by=10), lty=2)+
-  labs(x="Delay (weeks)", y="DALYs", col="Procedure")
+  geom_line(cex = 2) +
+  theme_bw() +
+  theme(legend.position = "bottom", text = element_text(size = 18)) +
+  geom_vline(xintercept = seq(12, 42, by = 10), lty = 2) +
+  labs(x = "Delay (weeks)", y = "DALYs", col = "Procedure")
 plot_descend_lin
 
 # Save the figures 
 ggsave(plot_descend_flatter, filename = "../figures/main_results/descend_steiler.png", device = "png", 
-       width = 15, height=10)
+       width = 15, height = 10)
 ggsave(plot_descend_steaper, filename = "../figures/main_results/descend_vlakker.png", device = "png", 
-       width = 15, height=10)
+       width = 15, height = 10)
 ggsave(plot_descend_lin, filename = "../figures/main_results/descend_lin.png", device = "png", 
-       width = 15, height=10)
+       width = 15, height = 10)
 ```
 
 
