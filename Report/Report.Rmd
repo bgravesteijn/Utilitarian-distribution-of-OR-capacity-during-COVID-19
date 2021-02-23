@@ -445,7 +445,7 @@ for(p in unique(urg$Label)){
   DALY52 <- df_res[df_res$Label==p&df_res$delay==52,]$DALY
   
   # Calculate slope
-  urg[urg$Label==p&urg$type=="DALY","urg"] <- quantile(DALY2-DALY52, probs=0.5)/50*52/12
+  urg[urg$Label==p&urg$type=="DALY","urg"]    <- quantile(DALY2-DALY52, probs=0.5)/50*52/12
   urg[urg$Label==p&urg$type=="DALY","urg_lo"] <- quantile(DALY2-DALY52, probs=0.025)/50*52/12
   urg[urg$Label==p&urg$type=="DALY","urg_hi"] <- quantile(DALY2-DALY52, probs=0.975)/50*52/12
   
