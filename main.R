@@ -19,10 +19,10 @@ library(dampack)
 
 
 #### Load data ####
-param <- data.frame(readxl::read_xlsx("Data/Model parameters.xlsx",sheet="Complete"))
+param <- data.frame(readxl::read_xlsx("Data/Model parameters.xlsx", sheet = "Complete"))
 cbs   <- read.csv("Data/CBS lifetable.csv", sep = ";")
 
-# document which paramaters do not have a unit and will be deleted
+# document which parameters do not have a unit and will be deleted
 param_NA <- param[which(is.na(param$Unit)), ]
 
 # Remove parameters without unit
@@ -37,8 +37,8 @@ for (i in numvar) {param[, i] <- as.numeric(param[, i])}
 # ############################# #
 
 # ## median survival times --> hazard to die 
- param[param$Unit == "Median survival time (weeks)", c("Med", "Lo", "Hi")]  <- log(2)/param[param$Unit == "Median survival time (weeks)", c("Med", "Hi", "Lo")]
-# explanation convertion: https://ncss-wpengine.netdna-ssl.com/wp-content/themes/ncss/pdf/Procedures/NCSS/Survival_Parameter_Conversion_Tool.pdf
+param[param$Unit == "Median survival time (weeks)", c("Med", "Lo", "Hi")]  <- log(2)/param[param$Unit == "Median survival time (weeks)", c("Med", "Hi", "Lo")]
+# explanation converting: https://ncss-wpengine.netdna-ssl.com/wp-content/themes/ncss/pdf/Procedures/NCSS/Survival_Parameter_Conversion_Tool.pdf
 
 ## 120-day survival rate --> probability to die per week
 param[param$Unit == "Probability 120-day survival", c("Med", "Lo", "Hi")]  <- RateToProb(ProbToRate(1 - param[param$Unit == "Probability 120-day survival", c("Med", "Hi", "Lo")], t = 1), t = 1/(120/7))
@@ -79,15 +79,17 @@ cbs$age <- as.numeric(substr(cbs$Leeftijd, start = 1, stop = 2))
 ###### Other units    ####
 ##########################
 ## Days --> weeks
-param[param$Unit == "Days", c("Med", "Lo", "Hi")]  <- param[param$Unit == "Days", c("Med", "Lo", "Hi")]/7
+param[param$Unit == "Days", c("Med", "Lo", "Hi")]  <- param[param$Unit == "Days", 
+                                                            c("Med", "Lo", "Hi")]/7
 
 ## Months --> weeks
-param[param$Unit == "Months", c("Med", "Lo", "Hi")]  <- param[param$Unit == "Months", c("Med", "Lo", "Hi")]/12*52
+param[param$Unit == "Months", c("Med", "Lo", "Hi")]  <- param[param$Unit == "Months", 
+                                                              c("Med", "Lo", "Hi")]/12*52
 
 
 ### Model structure 
 state_names <- c("Preop", "Postop", "Dead")  # names of health states
-n_s         <- length(state_names)           # lenght of the health states
+n_s         <- length(state_names)           # length of the health states
 
 # Delay in weeks
 delay <- seq(from = 2, to = 52, by = 10)
@@ -151,7 +153,7 @@ for (d in pop_names){
     n_cycles    <- 52 * n_years           # number of model cycles
     
     
-    # create the transition matrix
+    # create the transition matrix. in fact an array for all time points
     m_trans <- make_m_trans(number_states = n_s,
                             state_names = state_names,
                             number_cycles = n_cycles, 
@@ -168,13 +170,13 @@ for (d in pop_names){
     v_utility_noeff["Postop"] <- v_utility_noeff["Preop"]
     
     
-    # Start the senario analysis for different delays. 
+    # Start the scenario analysis for different delays. 
     for(i in 1:length(delay)){
       
       ## Include delay in transition matrix
       m_trans <- trans_operation(trans_matrix   = m_trans,
                                  weeks_until_op = delay[i],
-                                 number_cycles   = n_cycles)
+                                 number_cycles  = n_cycles)
       
       
       # create the Markov trace for the individuals 
@@ -185,7 +187,7 @@ for (d in pop_names){
       m_trace[1, ] <- c(1, 0, 0)  # all individuals start out in the Preop health states
       
       
-      ## Calculate Markov trace for this senario of delay
+      ## Calculate Markov trace for this scenario of delay
       for (t in 1:n_cycles){     # loop through the number of cycles
         m_trace[t + 1, ] <- t(m_trace[t, ]) %*% m_trans[, , t]    # estimate the Markov trace 
         # for the next cycle (t + 1)
@@ -194,15 +196,16 @@ for (d in pop_names){
       # Calculate the QALYs
       # Vector with the total effects (QALYs per cycle)
       if("Time_noeff_QoL" %in% names(p_vector) &   # If the effect on QoL is lost after a particular time
-         delay[i] > p_vector["Time_noeff_QoL"]){ # And if the delay is larger than the time untill the effect is lost
+         delay[i] > p_vector["Time_noeff_QoL"]){ # And if the delay is larger than the time until the effect is lost
         v_tu  <- (m_trace   %*%  v_utility_noeff)  # use the no-effect vector
       }else{
         v_tu  <- (m_trace   %*%  v_utility)        # use the utility vector wíth effect
       }
       
+    
       # Make discount vector 
       d_e_effect <- 0.015 # discount rate of 0.015 
-      times <- seq(0, n_cycles/52, by = 1/52)  # factor to adjust discount weights for cycle length. Every cycle is 3 months
+      times      <- seq(0, n_cycles/52, by = 1/52)  # factor to adjust discount weights for cycle length. Every cycle is 3 months
       v_dwe      <- 1 / ((1 + d_e_effect) ^ (times)) # make a vector with discount weight
       
       # Calculate the total QALYs
@@ -212,11 +215,11 @@ for (d in pop_names){
       df_res[df_res$iter == it & df_res$Pop == d & df_res$delay == delay[i], "QALY"] <- QALY[1]
       
       # DALYs
-      if(i==1){
-        df_res[df_res$iter==it & df_res$Pop == d & df_res$delay == delay[i], "DALY"] <- 0  
+      if(i == 1){ # if it is the first scenario, no DALY 
+        df_res[df_res$iter == it & df_res$Pop == d & df_res$delay == delay[i], "DALY"] <- 0  
       }else{
-        df_res[df_res$iter==it & df_res$Pop == d & df_res$delay == delay[i], "DALY"] <- 
-          df_res[df_res$iter == it & df_res$Pop == d & df_res$delay == delay[1], "QALY"] - QALY[1]
+        df_res[df_res$iter == it & df_res$Pop == d & df_res$delay == delay[i], "DALY"] <- 
+        df_res[df_res$iter == it & df_res$Pop == d & df_res$delay == delay[1], "QALY"] - QALY
       }
       
       # Calculate the LYs
@@ -229,19 +232,19 @@ for (d in pop_names){
       df_res[df_res$iter == it & df_res$Pop == d & df_res$delay == delay[i], "LY"] <- LY
       
       #YLL
-      if(i==1){
-        df_res[df_res$iter==it & df_res$Pop == d & df_res$delay == delay[i], "YLL"] <- 0  
-      }else{
-        df_res[df_res$iter==it & df_res$Pop == d & df_res$delay == delay[i], "YLL"] <- 
+      if(i == 1){ # if it is the first scenario, no YLL 
+          df_res[df_res$iter == it & df_res$Pop == d & df_res$delay == delay[i], "YLL"] <- 0  
+      }else{ # of all scenarios of delay subtract the LY in this scenario form the max LY to find the YLL
+          df_res[df_res$iter == it & df_res$Pop == d & df_res$delay == delay[i], "YLL"] <- 
           df_res[df_res$iter == it & df_res$Pop == d & df_res$delay == delay[1], "LY"] - LY
       }
       
       # Calculate the area above the curve for QALYs 
-      area.total <- df_res[df_res$Pop == d & df_res$iter == it, ]$QALY[1] * (delay[i]-2)
-      auc <- DescTools::AUC(x    = df_res[df_res$Pop == d & df_res$iter==it, ]$delay, 
-                            y    = df_res[df_res$Pop == d & df_res$iter==it, ]$QALY, 
-                            from = df_res[df_res$Pop == d & df_res$iter==it, ]$delay[1], 
-                            to   = df_res[df_res$Pop == d & df_res$iter==it, ]$delay[i], 
+      area.total <- df_res[df_res$Pop == d & df_res$iter == it, ]$QALY[1] * (delay[i] - 2)
+      auc <- DescTools::AUC(x    = df_res[df_res$Pop == d & df_res$iter == it, ]$delay, 
+                            y    = df_res[df_res$Pop == d & df_res$iter == it, ]$QALY, 
+                            from = df_res[df_res$Pop == d & df_res$iter == it, ]$delay[1], 
+                            to   = df_res[df_res$Pop == d & df_res$iter == it, ]$delay[i], 
                             method = "spline") # Calculate the area under the curve 
       aac <- area.total - auc # area above the curve 
       
@@ -250,12 +253,12 @@ for (d in pop_names){
       df_res[df_res$iter==it & df_res$Pop == d & df_res$delay == delay[i], "AAC_delay"] <- aac/(delay[i]-2)*52/12
       
       # Calculate the area above the curve for LYs 
-      area.totally <- df_res[df_res$Pop == d & df_res$iter == it, ]$LY[1] * (delay[i]-2)
-      aucly <- DescTools::AUC(x    = df_res[df_res$Pop == d & df_res$iter==it, ]$delay, 
-                            y    = df_res[df_res$Pop == d & df_res$iter==it, ]$LY, 
-                            from = df_res[df_res$Pop == d & df_res$iter==it, ]$delay[1], 
-                            to   = df_res[df_res$Pop == d & df_res$iter==it, ]$delay[i], 
-                            method = "spline") # Calculate the area under the curve 
+      area.totally <- df_res[df_res$Pop == d & df_res$iter == it, ]$LY[1] * (delay[i] - 2)
+      aucly        <- DescTools::AUC(x    = df_res[df_res$Pop == d & df_res$iter == it, ]$delay, 
+                                     y    = df_res[df_res$Pop == d & df_res$iter == it, ]$LY, 
+                                     from = df_res[df_res$Pop == d & df_res$iter == it, ]$delay[1], 
+                                     to   = df_res[df_res$Pop == d & df_res$iter == it, ]$delay[i], 
+                                   method = "spline") # Calculate the area under the curve 
       
       aacly <- area.totally - aucly # area above the curve
       
@@ -278,24 +281,24 @@ df_res$AAC_delay_ly[is.nan(df_res$AAC_delay_ly)] <- 0 # Divided by 0 is not rele
 
 # Pool results PSA
 df_res <- data.table(df_res)
-results_pooled <- df_res[,.(QALY_med      = median(QALY),
-                            QALY_lo       = quantile(QALY, probs = 0.025),
-                            QALY_hi       = quantile(QALY, probs = 0.975),
-                            DALY_med      = median(DALY),
-                            DALY_lo       = quantile(DALY, probs = 0.025),
-                            DALY_hi       = quantile(DALY, probs = 0.975),
-                            LY_med        = median(LY),
-                            LY_lo         = quantile(LY, probs = 0.025),
-                            LY_hi         = quantile(LY, probs = 0.975),
-                            YLL_med        = median(YLL),
-                            YLL_lo         = quantile(YLL, probs = 0.025),
-                            YLL_hi         = quantile(YLL, probs = 0.975),
-                            AAC_med       = median(AAC),
-                            AAC_lo        = quantile(AAC, probs = 0.025),
-                            AAC_hi        = quantile(AAC, probs = 0.975),
-                            AAC_delay_med = median(AAC_delay),
-                            AAC_delay_lo  = quantile(AAC_delay, probs = 0.025),
-                            AAC_delay_hi  = quantile(AAC_delay, probs = 0.975),
+results_pooled <- df_res[,.(QALY_med         = median(QALY),
+                            QALY_lo          = quantile(QALY, probs = 0.025),
+                            QALY_hi          = quantile(QALY, probs = 0.975),
+                            DALY_med         = median(DALY),
+                            DALY_lo          = quantile(DALY, probs = 0.025),
+                            DALY_hi          = quantile(DALY, probs = 0.975),
+                            LY_med           = median(LY),
+                            LY_lo            = quantile(LY, probs = 0.025),
+                            LY_hi            = quantile(LY, probs = 0.975),
+                            YLL_med          = median(YLL),
+                            YLL_lo           = quantile(YLL, probs = 0.025),
+                            YLL_hi           = quantile(YLL, probs = 0.975),
+                            AAC_med          = median(AAC),
+                            AAC_lo           = quantile(AAC, probs = 0.025),
+                            AAC_hi           = quantile(AAC, probs = 0.975),
+                            AAC_delay_med    = median(AAC_delay),
+                            AAC_delay_lo     = quantile(AAC_delay, probs = 0.025),
+                            AAC_delay_hi     = quantile(AAC_delay, probs = 0.975),
                             AAC_delay_ly_med = median(AAC_delay_ly),
                             AAC_delay_ly_lo  = quantile(AAC_delay_ly, probs = 0.025),
                             AAC_delay_ly_hi  = quantile(AAC_delay_ly, probs = 0.975)),
@@ -309,7 +312,7 @@ save(results_pooled,    file = "output/psa_pooled.Rdata")
 save(param,             file = "output/input_param.Rdata")
 save(param_psa,         file = "output/psa_parameters.RData")
 
-# plot results of all diseases seperately 
+# plot results of all diseases separately 
 # but without the never surgery (delay == 999)
 # using the function plotPopulationOutcomes from the file model.R
 plotPopulationOutcomes(data = results_pooled[results_pooled$delay!=999, ],
