@@ -1,24 +1,24 @@
 
-#### Load functions ####
+# 1. Load functions ####
 source("R/app0_functions.R")  # Load a function to install packages
 source("R/functions.R")       # Load general functions useful for Markov models 
 source("R/functions_PSA.R")   # Load the PSA function  
 source("R/model.R")           # Code of the main model
 
 # Only required once, 
-# uncommend when running the code for the first time
+# commend when running the code for the first time
 # v_packages_to_install <- c("ggplot2", "data.table", "triangle")
 # install_and_load(v_packages_to_install)
 # install_github("DARTH-git/dampack", force = TRUE)
 
-#### Load packages ####
+# 2. Load packages ####
 library(ggplot2)
 library(data.table)
 library(triangle)
 library(dampack)
 
 
-#### Load data ####
+# 3. Load data ####
 param <- data.frame(readxl::read_xlsx("Data/Model parameters.xlsx", sheet = "Complete"))
 cbs   <- read.csv("Data/CBS lifetable.csv", sep = ";")
 
@@ -33,7 +33,7 @@ numvar <- c("Med", "Lo", "Hi")
 for (i in numvar) {param[, i] <- as.numeric(param[, i])}
 
 # ############################# #
-#### Survival to right units ####
+##3.1 Survival to right units ####
 # ############################# #
 
 # ## median survival times --> hazard to die 
@@ -63,9 +63,9 @@ param[param$Unit == "Probability 30 day survival", c("Med", "Lo", "Hi")]  <- Rat
 ## Mortality rate per person year --> probability to die per week
 param[param$Unit == "Mortality rate per person-year", c("Med","Lo","Hi")] <- param[param$Unit == "Mortality rate per person-year", c("Med","Lo","Hi")]/52  
 
-#### CBS data ####
+##3.2 CBS data ####
 #CBS data: prob per year --> prob per week
-cbs$Man_kans   <- RateToProb(ProbToRate(p = cbs$Man_kans, t = 1),   t = 1/52)
+cbs$Man_kans   <- RateToProb(ProbToRate(p = cbs$Man_kans,   t = 1), t = 1/52)
 cbs$Vrouw_kans <- RateToProb(ProbToRate(p = cbs$Vrouw_kans, t = 1), t = 1/52)
 
 #CBS data: prob per sex --> average prob
@@ -75,10 +75,10 @@ cbs$prob <- (cbs$Man_kans + cbs$Vrouw_kans) / 2
 cbs$age <- as.numeric(substr(cbs$Leeftijd, start = 1, stop = 2))
 
 
-##########################
-###### Other units    ####
-##########################
-## Days --> weeks
+# ######################## #
+##3.3 Other units    ####
+# ######################## #
+# Days --> weeks
 param[param$Unit == "Days", c("Med", "Lo", "Hi")]  <- param[param$Unit == "Days", 
                                                             c("Med", "Lo", "Hi")]/7
 
@@ -108,19 +108,19 @@ df_res <- expand.grid(iter = 1:n_iter,                  # PSA iteration
                       delay = delay,                    # time of delay
                       QALY = NA,                        # QALYs
                       DALY = NA,                        # DALYs
-                      LY = NA,                          # LY: qol=1
+                      LY = NA,                          # LY: qol = 1
                       YLL = NA,                         # Years of life lost
-                      AAC = NA,
+                      AAC = NA,                         # Area above the curve
                       AAC_ly = NA,# Area above the curve (the loss in QALYs)
-                      AAC_delay = NA,
-                      AAC_delay_ly = NA)                # AAC/delay        
+                      AAC_delay = NA,                   # AAC/delay 
+                      AAC_delay_ly = NA)                # AAC/delay LY       
 
 # Add the surgeries/labels per population in the intervention column
 df_res$Intervention <- param$Intervention[match(df_res$Pop, param$Population)]
-df_res$Label        <- param$Label[match(df_res$Pop, param$Population)]
-df_res$Source       <- param$Source[match(df_res$Pop, param$Population)]
+df_res$Label        <- param$Label[       match(df_res$Pop, param$Population)]
+df_res$Source       <- param$Source[      match(df_res$Pop, param$Population)]
 
-pop_names <- sort(unique(param$Population))  # substract the disease names and order them in alphabetic order 
+pop_names <- sort(unique(param$Population))  # subtract the disease names and order them in alphabetic order 
 
 # Make a dataframe with PSA parameters 
 param_psa <- make_psa_df(param = param, n_iter = n_iter, seed = 19)
@@ -128,9 +128,11 @@ param_psa <- make_psa_df(param = param, n_iter = n_iter, seed = 19)
 # Remove the unit column, since these units are now all adjusted to weekly probabilities or age in years
 param_psa <- subset(param_psa, select = -c(Unit)) # Store the weekly probabilities in the dataframe param
 
-# loop over every disease 
-for (d in pop_names){
-  for(it in 1:n_iter){   # for every PSA iteration
+#4.0  Run model
+t_start_model <- Sys.time() # Store the time at the start of the simulation
+
+for (d in pop_names){ # loop over every disease 
+  for(it in 1:n_iter){  # for every PSA iteration
     
     # PSA estimates
     # Extract vector of parameters
@@ -155,10 +157,10 @@ for (d in pop_names){
     
     # create the transition matrix. in fact an array for all time points
     m_trans <- make_m_trans(number_states = n_s,
-                            state_names = state_names,
+                            state_names   = state_names,
                             number_cycles = n_cycles, 
-                            parameters = p_vector,
-                            data = cbs)
+                            parameters    = p_vector,
+                            data          = cbs)
     
     # rewards vectors (useful for state rewards)
     v_utility <- numeric(n_s)
@@ -273,9 +275,10 @@ for (d in pop_names){
     }
   } # close the number if PSA iterations
 } # close the loop for diseases
+t_end_model <- Sys.time() # Store the time at the end 
+t_run <- t_end_model - t_start_model # Calculate the duration of the simulation
 
-
-df_res$AAC_delay[is.nan(df_res$AAC_delay)] <- 0 # Divided by 0 is not relevant --> put to 0
+df_res$AAC_delay[   is.nan(df_res$AAC_delay)]    <- 0 # Divided by 0 is not relevant --> put to 0
 df_res$AAC_delay_ly[is.nan(df_res$AAC_delay_ly)] <- 0 # Divided by 0 is not relevant --> put to 0
 
 

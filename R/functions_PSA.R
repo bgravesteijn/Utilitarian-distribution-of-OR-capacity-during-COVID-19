@@ -26,7 +26,7 @@ make_psa_df <- function(param, n_iter, seed = 123){
                                              b = Hi, 
                                              c = Med))
       
-    }else{ #if distribution is not triangle
+    }else{ #if distribution is not triangle, but normal
       if(param[i, "Distribution"] == "Normal"){
         param_psa$psa_est[param_psa$Population == param$Population[i] & 
                           param_psa$Param      == param$Param[i]] <- with(param[i, ], 
