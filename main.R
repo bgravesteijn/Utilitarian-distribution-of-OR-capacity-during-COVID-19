@@ -206,7 +206,7 @@ for (d in pop_names){
       v_dwe      <- 1 / ((1 + d_e_effect) ^ (times)) # make a vector with discount weight
       
       # Calculate the total QALYs
-      QALY <- (t(v_tu) %*%  v_dwe) / n_years
+      QALY <- (t(v_tu) %*%  v_dwe) / 52
       
       # Store discounted total QALY result 
       df_res[df_res$iter == it & df_res$Pop == d & df_res$delay == delay[i], "QALY"] <- QALY[1]
@@ -223,7 +223,7 @@ for (d in pop_names){
       v_tu_ly <- m_trace %*% c(1, 1, 0)
       
       # Apply discount
-      LY      <- (t(v_tu_ly) %*%  v_dwe) / n_years
+      LY      <- (t(v_tu_ly) %*%  v_dwe) / 52
       
       #Store in results
       df_res[df_res$iter == it & df_res$Pop == d & df_res$delay == delay[i], "LY"] <- LY
