@@ -325,6 +325,10 @@ plot_psa <- ggplot(plotpsa.df,
 ggsave(plot_psa, 
        device = "png", file = "../figures/main_results/psa_est.png", 
        width = 50, height = 35, units = "cm")
+
+ggsave(plot_psa, 
+       device = "png", file = "../../OR-decision-model/Manuscript/Submissions/Value in Health/Revision 1/Corrections/Figurestables/fig2.png", 
+       width = 50, height = 35, units = "cm")
 ```
 
 ```{r, eval = FALSE, echo = FALSE, fig.width = 25, fig.height = 25}
@@ -498,7 +502,8 @@ order_interventions <- as.character(urg_DALY$Intervention[order(urg_DALY$urg, de
 
 desc_df <- results_pooled[results_pooled$delay != 999, ]
 
-desc_df_steaper <- desc_df[desc_df$Label%in%c("Instable AP, CABG", 
+desc_df_steaper <- desc_df[desc_df$Label%in%c("Instable AP, CABG",
+                                              "AVR, TAVI",
                                               "Carotid endarterectomy"),]
 
 desc_df_flatter <- desc_df[desc_df$Label%in%c("ASD, repair",
@@ -510,12 +515,17 @@ desc_df_flatter <- desc_df[desc_df$Label%in%c("ASD, repair",
                                               "Ovarium ca., resection and HIPEC", 
                                               "High-risk endometrium ca, resection",
                                               "Mammaca., mastectomy", 
-                                              "Cholangeoca., resection", 
                                               "MI bladder ca, cystectomy",
-                                              "AVR, TAVI",
                                               "High-grade glioma, resection",
                                               "PAD F3-4, bypass",
+                                              "Liver metastasis Colon cancer, resection",
+                                              "Penis cancer, resection",
+                                              "MI bladder cancer, cystectomy",
+                                              "Pancreas cancer, Whipple",
+                                              "HCC, resection",
+                                              "Mild larynx cancer, resection",
                                               "Penis ca., resection",
+                                              "Ovarium cancer, resection and HIPEC",
                                               "Liver metastasis colonca, resection"), ]
 
 desc_df_lin     <- desc_df[!desc_df$Label %in% c(desc_df_flatter$Label, desc_df_steaper$Label), ]
@@ -550,9 +560,9 @@ plot_descend_lin <- ggplot(desc_df_lin,
 plot_descend_lin
 
 # Save the figures 
-ggsave(plot_descend_flatter, filename = "../figures/main_results/descend_steiler.png", device = "png", 
+ggsave(plot_descend_steaper, filename = "../figures/main_results/descend_steiler.png", device = "png", 
        width = 15, height = 10)
-ggsave(plot_descend_steaper, filename = "../figures/main_results/descend_vlakker.png", device = "png", 
+ggsave(plot_descend_flatter, filename = "../figures/main_results/descend_vlakker.png", device = "png", 
        width = 15, height = 10)
 ggsave(plot_descend_lin, filename = "../figures/main_results/descend_lin.png", device = "png", 
        width = 15, height = 10)
@@ -685,6 +695,9 @@ bnft_v2 <- ggplot(bnft2, aes(x = Label, y = Bnft, ymin = Bnft_lo, ymax = Bnft_hi
 
 bnft_v2
 ggsave(bnft_v2,filename = "../figures/main_results/bnft_v2.png", width = 15, height = 10)
+
+# ggsave(bnft_v2,filename = "../../OR-decision-model/Manuscript/Submissions/Value in Health/Revision 1/Corrections/Figurestables/fig3.png", width = 15, height = 10)
+
 ```
 
 ```{r, eval = FALSE}
@@ -748,13 +761,13 @@ urg_v2 <- ggplot(urg2, aes(x = Label, y = urg, ymin = urg_lo, ymax = urg_hi)) +
   geom_hline(yintercept = 0, colour = "black") +
   
   facet_wrap_custom(~type, scales = "free_x", scale_overrides = list(
-    scale_override(1, scale_y_continuous(limits = c(-0.4, 0),
-                                         breaks = seq(from = -0.4, to = 0,by = 0.05),
-                                         labels = seq(from = 0.4,  to = 0,by = -0.05), 
+    scale_override(1, scale_y_continuous(limits = c(-0.25, 0),
+                                         breaks = seq(from = -0.25, to = 0,by = 0.05),
+                                         labels = seq(from = 0.25,  to = 0,by = -0.05), 
                      expand = c(0, 0))),
-    scale_override(2, scale_y_continuous(limits = c(0, 0.4),
-                                         breaks = seq(from = 0, to = 0.4,by = 0.05),
-                                         labels = seq(from = 0, to = 0.4,by = 0.05), 
+    scale_override(2, scale_y_continuous(limits = c(0, 0.25),
+                                         breaks = seq(from = 0, to = 0.25,by = 0.05),
+                                         labels = seq(from = 0, to = 0.25,by = 0.05), 
                      expand = c(0, 0)))
   ))+
   coord_flip() +
@@ -767,6 +780,7 @@ urg_v2 <- ggplot(urg2, aes(x = Label, y = urg, ymin = urg_lo, ymax = urg_hi)) +
 urg_v2
 ggsave(urg_v2,filename = "../figures/main_results/urg_v2.png", width = 15, height = 10)
 
+ggsave(urg_v2,filename = "../../OR-decision-model/Manuscript/Submissions/Value in Health/Revision 1/Corrections/Figurestables/fig3.png", width = 15, height = 10)
 
 #ggsave(urg_v2,filename = "../../OR-decision-model/Manuscript/Submissions/Value in Health/Revision 1/Fig3.png", width = 15, height = 10)
 
